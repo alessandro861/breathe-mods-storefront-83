@@ -5,6 +5,16 @@ import { motion } from 'framer-motion';
 const HeroSection: React.FC = () => {
   return (
     <div className="relative flex flex-col items-center justify-center py-12 md:py-16 text-center">
+      {/* Main Title */}
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.7 }}
+        className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70"
+      >
+        ELEVATE YOUR DAYZ EXPERIENCE
+      </motion.h1>
+      
       {/* Tagline */}
       <motion.p
         initial={{ opacity: 0, y: 10 }}
@@ -35,8 +45,11 @@ const HeroSection: React.FC = () => {
           { title: "Regularly Updated", desc: "Stay current with game updates" },
           { title: "Custom Options", desc: "Request personalized mods" }
         ].map((feature, index) => (
-          <div key={index} className="glass-panel rounded-lg p-4">
-            <h3 className="text-primary font-medium mb-1">{feature.title}</h3>
+          <div 
+            key={index} 
+            className="glass-panel rounded-lg p-5 transform transition-all duration-300 hover:scale-105 hover:shadow-primary/10"
+          >
+            <h3 className="text-primary font-medium mb-2">{feature.title}</h3>
             <p className="text-sm text-gray-400">{feature.desc}</p>
           </div>
         ))}
