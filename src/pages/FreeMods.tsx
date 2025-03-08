@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -79,8 +80,8 @@ const FreeMods = () => {
     },
     {
       id: 2,
-      title: "Helicrash Mod",
-      image: "https://steamuserimages-a.akamaihd.net/ugc/2554754286135923954/4E59AFFFB5E45DFF4753231CA4F3B7FED5FEE14C/?imw=637&imh=358&ima=fit&impolicy=Letterbox",
+      title: "Helicrash Updated (Breathe mods)",
+      image: "/lovable-uploads/b2bac61f-7532-4ab8-afcb-8ff6df198f79.png",
       description: "Improved helicopter crash sites with enhanced loot, visual effects, and more frequent spawns for an exciting gameplay experience.",
       url: "https://steamcommunity.com/sharedfiles/filedetails/?id=3404088257&searchtext=Helicrash",
       repackPrice: "10€"
