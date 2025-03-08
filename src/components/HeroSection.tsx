@@ -4,25 +4,7 @@ import { motion } from 'framer-motion';
 
 const HeroSection: React.FC = () => {
   return (
-    <div className="relative flex flex-col items-center justify-center py-16 md:py-24 text-center">
-      {/* Logo Effect */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 100,
-          damping: 20,
-          delay: 0.2
-        }}
-        className="relative mb-8"
-      >
-        <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-breathing-glow"></div>
-        <div className="relative z-10 text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter text-shine">
-          BREATHE MODS
-        </div>
-      </motion.div>
-      
+    <div className="relative flex flex-col items-center justify-center py-12 md:py-16 text-center">
       {/* Tagline */}
       <motion.p
         initial={{ opacity: 0, y: 10 }}
