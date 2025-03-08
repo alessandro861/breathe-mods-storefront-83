@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <header className="py-4 px-6">
           <div className="container mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-center">
-              <Link to="/" className="flex items-center mb-4 md:mb-0">
+              <a href="https://discord.gg/Yr8aY3fW4f" target="_blank" rel="noopener noreferrer" className="flex items-center mb-4 md:mb-0">
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-primary/30 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
                   <div className="relative bg-background/40 backdrop-blur-sm p-2 rounded-xl flex items-center border border-white/10 shadow-lg hover:shadow-primary/20 transition duration-300">
@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                   </div>
                 </div>
-              </Link>
+              </a>
               
               {/* Navigation */}
               <div className="flex items-center">
