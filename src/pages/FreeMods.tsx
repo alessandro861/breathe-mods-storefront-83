@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -73,7 +72,7 @@ const FreeMods = () => {
     {
       id: 1,
       title: "Tarkov Medicine Mod",
-      image: "https://steamuserimages-a.akamaihd.net/ugc/2554754286131076107/E1E0A2FD7BF6835EE44A6EACAAAF45FE3B9183BF/?imw=637&imh=358&ima=fit&impolicy=Letterbox",
+      image: "/lovable-uploads/55cc4101-b11d-425b-a3de-8a72b07af5ad.png",
       description: "Enhanced medical system inspired by Escape from Tarkov. Adds realistic medical items and healing mechanics to DayZ.",
       url: "https://steamcommunity.com/sharedfiles/filedetails/?id=3399774519&searchtext=Tarkov+medicine",
       repackPrice: "10€"
