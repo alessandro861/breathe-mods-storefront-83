@@ -30,6 +30,10 @@ const ModCard = ({
           src={image} 
           alt={title} 
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "https://via.placeholder.com/800x400?text=Mod+Image";
+          }}
         />
         <div className="absolute top-3 right-3 bg-primary/80 text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
           Free Mod
