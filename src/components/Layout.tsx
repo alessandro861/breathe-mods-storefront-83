@@ -2,13 +2,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+  
+  // Define navigation items
+  const navItems = [
+    { path: '/', label: 'Home' },
+    { path: '/free-mods', label: 'Free Mods' },
+    { path: '/paid-mods', label: 'Paid Mods' },
+    { path: '/rules', label: 'Rules' },
+    { path: '/request', label: 'Request Mod' },
+  ];
+  
   return (
     <div className="relative min-h-screen flex flex-col">
       <div className="fixed inset-0 z-0">
@@ -22,25 +33,44 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Header with Logo */}
+        {/* Header with Logo and Navigation */}
         <header className="py-4 px-6">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link to="/" className="flex items-center">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-primary/30 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                <div className="relative bg-background/40 backdrop-blur-sm p-2 rounded-xl flex items-center border border-white/10 shadow-lg hover:shadow-primary/20 transition duration-300">
-                  <img 
-                    src="/lovable-uploads/0cb8c13e-0e13-4275-984a-93719a2a77e1.png" 
-                    alt="Breathe Mods Logo" 
-                    className="h-12 w-12 mr-3 filter drop-shadow-md"
-                  />
-                  <div>
-                    <span className="text-2xl font-bold text-shine tracking-tight">Breathe Mods</span>
-                    <div className="text-xs text-gray-400">Premium Mods</div>
+          <div className="container mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <Link to="/" className="flex items-center mb-4 md:mb-0">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-primary/30 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                  <div className="relative bg-background/40 backdrop-blur-sm p-2 rounded-xl flex items-center border border-white/10 shadow-lg hover:shadow-primary/20 transition duration-300">
+                    <img 
+                      src="/lovable-uploads/78c9ee5d-bf68-4af2-9b44-a035c2bde3da.png" 
+                      alt="Breathe Mods Logo" 
+                      className="h-12 w-12 mr-3 filter drop-shadow-md"
+                    />
+                    <div>
+                      <span className="text-2xl font-bold text-shine tracking-tight">Breathe Mods</span>
+                      <div className="text-xs text-gray-400">Premium Mods</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+              
+              {/* Navigation */}
+              <nav className="flex flex-wrap justify-center gap-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                      location.pathname === item.path
+                        ? 'bg-primary/20 text-white font-medium'
+                        : 'hover:bg-white/5 text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
           </div>
         </header>
         
