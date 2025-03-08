@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Download, PackageCheck, AlertCircle } from 'lucide-react';
+import { ExternalLink, PackageCheck } from 'lucide-react';
 
 // Mod card component for individual mods
 const ModCard = ({ 
@@ -54,8 +54,8 @@ const ModCard = ({
             rel="noopener noreferrer"
             className="interactive-button button-shine rounded-lg px-4 py-2 flex-1 flex items-center justify-center space-x-2"
           >
-            <Download className="h-4 w-4" />
-            <span>Download</span>
+            <ExternalLink className="h-4 w-4" />
+            <span>View on Steam</span>
           </a>
         </div>
       </div>
@@ -69,7 +69,7 @@ const FreeMods = () => {
     {
       id: 1,
       title: "Tarkov Medicine Mod",
-      image: "/lovable-uploads/78c9ee5d-bf68-4af2-9b44-a035c2bde3da.png",
+      image: "https://steamuserimages-a.akamaihd.net/ugc/2554754286131076107/E1E0A2FD7BF6835EE44A6EACAAAF45FE3B9183BF/?imw=637&imh=358&ima=fit&impolicy=Letterbox",
       description: "Enhanced medical system inspired by Escape from Tarkov. Adds realistic medical items and healing mechanics to DayZ.",
       url: "https://steamcommunity.com/sharedfiles/filedetails/?id=3399774519&searchtext=Tarkov+medicine",
       repackPrice: "10€"
@@ -77,7 +77,7 @@ const FreeMods = () => {
     {
       id: 2,
       title: "Helicrash Mod",
-      image: "/lovable-uploads/78c9ee5d-bf68-4af2-9b44-a035c2bde3da.png",
+      image: "https://steamuserimages-a.akamaihd.net/ugc/2554754286135923954/4E59AFFFB5E45DFF4753231CA4F3B7FED5FEE14C/?imw=637&imh=358&ima=fit&impolicy=Letterbox",
       description: "Improved helicopter crash sites with enhanced loot, visual effects, and more frequent spawns for an exciting gameplay experience.",
       url: "https://steamcommunity.com/sharedfiles/filedetails/?id=3404088257&searchtext=Helicrash",
       repackPrice: "10€"
@@ -123,25 +123,6 @@ const FreeMods = () => {
             />
           ))}
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="glass-panel rounded-xl p-6 mb-10"
-        >
-          <div className="flex items-start space-x-4">
-            <AlertCircle className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="font-bold text-xl mb-2">Need Help Installing Mods?</h3>
-              <p className="text-gray-300">
-                Our professional repack service ensures your mods are correctly installed and configured. 
-                For just 10€ per mod, we'll save you time and ensure everything runs smoothly.
-                Contact us for more details.
-              </p>
-            </div>
-          </div>
-        </motion.div>
       </motion.div>
     </Layout>
   );
