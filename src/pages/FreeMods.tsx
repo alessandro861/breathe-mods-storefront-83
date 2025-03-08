@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { ExternalLink, PackageCheck, Plus, Trash, Edit, Save } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import ImageUpload from '@/components/ImageUpload';
 
 // Initial mods data
 const initialMods = [
@@ -71,14 +71,8 @@ const ModForm = ({
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="image" className="text-sm font-medium">Image URL</label>
-        <Input
-          id="image"
-          value={image}
-          onChange={(e) => setImage(e.target.value)}
-          placeholder="Enter image URL"
-          required
-        />
+        <label className="text-sm font-medium">Mod Image</label>
+        <ImageUpload currentImage={image} onImageChange={setImage} />
       </div>
       
       <div className="space-y-2">
@@ -304,6 +298,9 @@ const FreeMods = () => {
                   <DialogTitle>
                     {currentMod ? "Edit Mod" : "Add New Mod"}
                   </DialogTitle>
+                  <DialogDescription>
+                    {currentMod ? "Edit the details of your mod" : "Add a new mod to your collection"}
+                  </DialogDescription>
                 </DialogHeader>
                 <ModForm 
                   mod={currentMod || undefined}
