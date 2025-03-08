@@ -8,9 +8,10 @@ interface NavButtonProps {
   to: string;
   label: string;
   delay?: number;
+  comingSoon?: boolean;
 }
 
-const NavButton: React.FC<NavButtonProps> = ({ to, label, delay = 0 }) => {
+const NavButton: React.FC<NavButtonProps> = ({ to, label, delay = 0, comingSoon = to !== '/rules' && to !== '/free-mods' }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,7 +30,7 @@ const NavButton: React.FC<NavButtonProps> = ({ to, label, delay = 0 }) => {
             <span className="text-lg font-medium">{label}</span>
             <ArrowRight className="ml-2 h-5 w-5 text-primary" />
           </div>
-          <div className="mt-1 text-xs text-gray-400">Coming Soon</div>
+          {comingSoon && <div className="mt-1 text-xs text-gray-400">Coming Soon</div>}
         </div>
       </Link>
     </motion.div>

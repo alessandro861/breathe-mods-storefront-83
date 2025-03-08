@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import FreeMods from "./pages/FreeMods";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
+import Rules from "./pages/Rules";
 
 const queryClient = new QueryClient();
 
@@ -21,7 +22,7 @@ const App = () => (
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/rules" element={<ComingSoon />} />
+            <Route path="/rules" element={<Rules />} />
             <Route path="/free-mods" element={<FreeMods />} />
             <Route path="/paid-mods" element={<ComingSoon />} />
             <Route path="/request" element={<ComingSoon />} />
