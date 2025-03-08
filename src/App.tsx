@@ -10,26 +10,29 @@ import FreeMods from "./pages/FreeMods";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import Rules from "./pages/Rules";
+import { AdminProvider } from "./hooks/useAdmin";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/rules" element={<Rules />} />
-            <Route path="/free-mods" element={<FreeMods />} />
-            <Route path="/paid-mods" element={<ComingSoon />} />
-            <Route path="/request" element={<ComingSoon />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AnimatePresence>
-      </BrowserRouter>
+      <AdminProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AnimatePresence mode="wait">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/rules" element={<Rules />} />
+              <Route path="/free-mods" element={<FreeMods />} />
+              <Route path="/paid-mods" element={<ComingSoon />} />
+              <Route path="/request" element={<ComingSoon />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </BrowserRouter>
+      </AdminProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

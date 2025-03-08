@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation } from 'react-router-dom';
+import AdminLogin from './AdminLogin';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -55,21 +56,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </Link>
               
               {/* Navigation */}
-              <nav className="flex flex-wrap justify-center gap-2">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                      location.pathname === item.path
-                        ? 'bg-primary/20 text-white font-medium'
-                        : 'hover:bg-white/5 text-gray-300 hover:text-white'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
+              <div className="flex items-center">
+                <nav className="flex flex-wrap justify-center gap-2 mr-4">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                        location.pathname === item.path
+                          ? 'bg-primary/20 text-white font-medium'
+                          : 'hover:bg-white/5 text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+                <AdminLogin />
+              </div>
             </div>
           </div>
         </header>
