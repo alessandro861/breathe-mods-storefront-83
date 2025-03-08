@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -96,25 +95,6 @@ const FreeMods = () => {
         transition={{ duration: 0.5 }}
         className="max-w-6xl mx-auto"
       >
-        <div className="text-center mb-10">
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-4xl font-bold mb-4 text-shine"
-          >
-            FREE MODS
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="text-gray-300 max-w-3xl mx-auto"
-          >
-            Download these mods for free and enhance your DayZ experience. Professional repack service available for 10€ per mod.
-          </motion.p>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {mods.map((mod) => (
             <ModCard
