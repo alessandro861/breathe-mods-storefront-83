@@ -36,7 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   />
                   <div>
                     <span className="text-2xl font-bold text-shine tracking-tight">Breathe Mods</span>
-                    <div className="text-xs text-gray-400">Premium DayZ Modifications</div>
+                    <div className="text-xs text-gray-400">Premium Mods</div>
                   </div>
                 </div>
               </div>
