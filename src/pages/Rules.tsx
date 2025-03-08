@@ -119,7 +119,7 @@ const Rules: React.FC = () => {
           />
           <QA
             question="2. Question: Can I make retextures on Weapons or Clothes?"
-            answer="Answer: Yes, you can do it. for this, convenient "Zbytek" selections and a convenient modification structure have been made so that you can add object re-textures. At most you may have a problem when updating the modification, you will need to copy all config files to the new version and your retextures if you made changes."
+            answer={'Answer: Yes, you can do it. for this, convenient "Zbytek" selections and a convenient modification structure have been made so that you can add object re-textures. At most you may have a problem when updating the modification, you will need to copy all config files to the new version and your retextures if you made changes.'}
           />
         </RuleSection>
 
@@ -158,7 +158,7 @@ const Rules: React.FC = () => {
             Rules are subject to change, you are 100% responsible for following the rules, ignorance is not an excuse. 
             Synced Community reserves the right to ban without reason. Clipping or recording gameplay is for your own sake, 
             to help keep the community safe & free of cheaters, you as a Member of Synced, are liable to clip your own gameplay, 
-            due to the influx of cheaters in PC Gaming. If you cannot provide clips & you're "sus" or suspicious to the Community, 
+            due to the influx of cheaters in PC Gaming. If you cannot provide clips & you&apos;re &quot;sus&quot; or suspicious to the Community, 
             bans may be issued for suspected cheating activity.
           </p>
         </RuleSection>
@@ -171,7 +171,7 @@ const Rules: React.FC = () => {
         >
           <div className="space-y-3">
             <RuleItem number={1} text="It is forbidden to sell/distribute/transfer this product to third parties." />
-            <RuleItem number={2} text="Any rental of server assemblies with installed "franchise" mods is prohibited." />
+            <RuleItem number={2} text={'Any rental of server assemblies with installed "franchise" mods is prohibited.'} />
             <RuleItem number={3} text="The product is purchased for 1 server (project)." />
             <RuleItem number={4} text="It is forbidden to unpack and use any parts of this mod in other works (scripts, models)." />
             <RuleItem number={5} text="It is forbidden to upload the Server side of the mod to the STEAM workshop." />
