@@ -63,6 +63,14 @@ const FreeMods = () => {
     return savedMods ? JSON.parse(savedMods) : initialPaidMods;
   });
 
+  // Ensure localStorage has the initial data if it's empty
+  useEffect(() => {
+    if (!localStorage.getItem('breathe-paid-mods')) {
+      localStorage.setItem('breathe-paid-mods', JSON.stringify(initialPaidMods));
+      setPaidMods(initialPaidMods);
+    }
+  }, []);
+
   // Save mods to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('breathe-free-mods', JSON.stringify(freeMods));
