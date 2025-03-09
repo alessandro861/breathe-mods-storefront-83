@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import FreeMods from "./pages/FreeMods";
-import ComingSoon from "./pages/ComingSoon";
+import PaidMods from "./pages/PaidMods";
 import NotFound from "./pages/NotFound";
 import Rules from "./pages/Rules";
 import Request from "./pages/Request";
@@ -27,7 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/free-mods" element={<FreeMods />} />
-              <Route path="/paid-mods" element={<ComingSoon />} />
+              <Route path="/paid-mods" element={<PaidMods />} />
               <Route path="/request" element={<Request />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -10,22 +10,24 @@ import ImageUpload from '@/components/ImageUpload';
 import { Mod } from './ModCard';
 
 interface ModFormProps {
-  mod?: Mod;
+  mod?: Partial<Mod>;
   onSubmit: (mod: Omit<Mod, 'id'>) => void;
   onCancel: () => void;
+  isPaidOnly?: boolean;
 }
 
 const ModForm: React.FC<ModFormProps> = ({ 
   mod, 
   onSubmit, 
-  onCancel 
+  onCancel,
+  isPaidOnly = false
 }) => {
   const [title, setTitle] = useState(mod?.title || '');
   const [image, setImage] = useState(mod?.image || '');
   const [description, setDescription] = useState(mod?.description || '');
   const [url, setUrl] = useState(mod?.url || '');
   const [repackPrice, setRepackPrice] = useState(mod?.repackPrice || '');
-  const [isPaid, setIsPaid] = useState(mod?.isPaid || false);
+  const [isPaid, setIsPaid] = useState(isPaidOnly || mod?.isPaid || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ const ModForm: React.FC<ModFormProps> = ({
       description,
       url,
       repackPrice,
-      isPaid
+      isPaid: isPaidOnly ? true : isPaid
     });
   };
 
@@ -90,14 +92,16 @@ const ModForm: React.FC<ModFormProps> = ({
         />
       </div>
       
-      <div className="flex items-center space-x-2">
-        <Switch 
-          id="isPaid" 
-          checked={isPaid}
-          onCheckedChange={setIsPaid}
-        />
-        <Label htmlFor="isPaid">Paid Mod</Label>
-      </div>
+      {!isPaidOnly && (
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="isPaid" 
+            checked={isPaid}
+            onCheckedChange={setIsPaid}
+          />
+          <Label htmlFor="isPaid">Paid Mod</Label>
+        </div>
+      )}
       
       <div className="flex space-x-2 pt-2">
         <Button type="submit" className="flex-1">
