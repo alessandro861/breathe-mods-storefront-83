@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
@@ -46,7 +45,7 @@ const Index: React.FC = () => {
               <Link to="/free-mods">
                 <Button size="lg" className="text-md group">
                   <Download className="mr-2 h-5 w-5 group-hover:animate-pulse" />
-                  Get Free Mods
+                  Get Mods
                   <ArrowRight className="ml-2 h-4 w-4 opacity-70" />
                 </Button>
               </Link>
@@ -117,14 +116,13 @@ const Index: React.FC = () => {
           </motion.div>
           
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-5xl mx-auto"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.7, duration: 0.5 }}
           >
             <NavButton to="/rules" label="Rules" icon={<Shield className="h-5 w-5 text-primary" />} delay={0.1} />
-            <NavButton to="/free-mods" label="Free Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
-            <NavButton to="/paid-mods" label="Paid Mods" icon={<Star className="h-5 w-5 text-primary" />} delay={0.3} />
+            <NavButton to="/free-mods" label="Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
             <NavButton to="/request" label="Request a Mod" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
           </motion.div>
         </section>

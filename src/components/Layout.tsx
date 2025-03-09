@@ -15,8 +15,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Define navigation items
   const navItems = [
     { path: '/', label: 'Home' },
-    { path: '/free-mods', label: 'Free Mods' },
-    { path: '/paid-mods', label: 'Paid Mods' },
+    { path: '/free-mods', label: 'Mods' },
     { path: '/rules', label: 'Rules' },
     { path: '/request', label: 'Request Mod' },
   ];
