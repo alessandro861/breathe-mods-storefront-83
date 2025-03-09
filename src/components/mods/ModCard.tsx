@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink, PackageCheck, Edit, Trash } from 'lucide-react';
+import { ExternalLink, PackageCheck, Edit, Trash, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface Mod {
@@ -11,6 +11,7 @@ export interface Mod {
   description: string;
   url: string;
   repackPrice: string;
+  isPaid?: boolean;
 }
 
 interface ModCardProps {
@@ -64,8 +65,13 @@ const ModCard: React.FC<ModCardProps> = ({
             target.src = "https://via.placeholder.com/800x400?text=Mod+Image";
           }}
         />
-        <div className="absolute top-3 right-3 bg-primary/80 text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm">
-          Free Mod
+        <div className={`absolute top-3 right-3 ${mod.isPaid ? 'bg-amber-500/80' : 'bg-primary/80'} text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm`}>
+          {mod.isPaid ? (
+            <span className="flex items-center">
+              <Flag className="h-3.5 w-3.5 mr-1" />
+              Paid Mod
+            </span>
+          ) : 'Free Mod'}
         </div>
       </div>
       
@@ -88,7 +94,7 @@ const ModCard: React.FC<ModCardProps> = ({
             className="interactive-button button-shine rounded-lg px-4 py-2 flex-1 flex items-center justify-center space-x-2"
           >
             <ExternalLink className="h-4 w-4" />
-            <span>View on Steam</span>
+            <span>View on {mod.isPaid ? 'YouTube' : 'Steam'}</span>
           </a>
         </div>
       </div>

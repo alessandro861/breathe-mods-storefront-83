@@ -4,6 +4,8 @@ import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import ImageUpload from '@/components/ImageUpload';
 import { Mod } from './ModCard';
 
@@ -23,6 +25,7 @@ const ModForm: React.FC<ModFormProps> = ({
   const [description, setDescription] = useState(mod?.description || '');
   const [url, setUrl] = useState(mod?.url || '');
   const [repackPrice, setRepackPrice] = useState(mod?.repackPrice || '');
+  const [isPaid, setIsPaid] = useState(mod?.isPaid || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +34,8 @@ const ModForm: React.FC<ModFormProps> = ({
       image,
       description,
       url,
-      repackPrice
+      repackPrice,
+      isPaid
     });
   };
 
@@ -65,12 +69,12 @@ const ModForm: React.FC<ModFormProps> = ({
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="url" className="text-sm font-medium">Steam URL</label>
+        <label htmlFor="url" className="text-sm font-medium">URL</label>
         <Input
           id="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="Enter Steam workshop URL"
+          placeholder={isPaid ? "Enter YouTube or video URL" : "Enter Steam workshop URL"}
           required
         />
       </div>
@@ -84,6 +88,15 @@ const ModForm: React.FC<ModFormProps> = ({
           placeholder="e.g. 10€"
           required
         />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="isPaid" 
+          checked={isPaid}
+          onCheckedChange={setIsPaid}
+        />
+        <Label htmlFor="isPaid">Paid Mod</Label>
       </div>
       
       <div className="flex space-x-2 pt-2">
