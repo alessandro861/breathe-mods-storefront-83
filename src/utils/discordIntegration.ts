@@ -72,6 +72,55 @@ export const assignDiscordRole = async (
 };
 
 /**
+ * Fonction pour envoyer une demande d'attribution de rôle via Zapier
+ * Cette méthode contourne les limitations CORS en utilisant Zapier comme intermédiaire
+ */
+export const assignRoleViaZapier = async (
+  discordUsername: string,
+  webhookUrl: string
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    if (!webhookUrl) {
+      throw new Error("L'URL du webhook Zapier est requise");
+    }
+
+    if (!discordUsername) {
+      throw new Error("Le nom d'utilisateur Discord est requis");
+    }
+
+    console.log(`[Zapier Integration] Sending role assignment request for ${discordUsername}`);
+    
+    // Envoi des données à Zapier via un webhook
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      mode: "no-cors", // Évite les erreurs CORS
+      body: JSON.stringify({
+        discordUsername: discordUsername,
+        timestamp: new Date().toISOString(),
+        action: "assign_role",
+        source: window.location.origin,
+      }),
+    });
+
+    // Comme nous utilisons mode: "no-cors", nous ne pouvons pas vérifier la réponse
+    // Nous supposons donc que la requête a réussi si aucune erreur n'a été levée
+    return { 
+      success: true, 
+      message: `Demande d'attribution de rôle envoyée pour ${discordUsername} via Zapier. Vérifiez l'historique de votre Zap pour confirmer le traitement.` 
+    };
+  } catch (error) {
+    console.error('Error with Zapier webhook:', error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Erreur lors de l'envoi de la demande à Zapier" 
+    };
+  }
+};
+
+/**
  * Guide d'implémentation du backend pour l'attribution de rôles Discord
  */
 export const getBackendImplementationGuide = (): string => {
@@ -146,5 +195,73 @@ app.listen(port, () => {
 
 ## 6. Mettez à jour le frontend
 Modifiez PurchaseDialog.tsx pour appeler votre API backend au lieu de la fonction directe.
+
+## 7. Solution alternative avec Zapier
+Si vous préférez une solution sans backend:
+
+1. Créez un compte Zapier (https://zapier.com)
+2. Créez un nouveau Zap avec un déclencheur "Webhook by Zapier"
+3. Comme action, utilisez l'intégration Discord pour ajouter un rôle à un utilisateur
+4. Configurez les détails nécessaires (token bot, serveur ID, etc.)
+5. Activez le Zap et copiez l'URL du webhook
+6. Utilisez cette URL dans votre application avec la fonction assignRoleViaZapier()
+`;
+};
+
+/**
+ * Guide d'implémentation Zapier pour l'attribution de rôles Discord
+ */
+export const getZapierImplementationGuide = (): string => {
+  return `
+# Guide d'implémentation Zapier pour l'attribution de rôles Discord
+
+Zapier peut servir d'intermédiaire entre votre application et Discord, ce qui vous évite de créer un backend personnalisé.
+
+## Étapes de configuration:
+
+### 1. Créez un compte Zapier
+- Inscrivez-vous sur https://zapier.com si vous n'avez pas encore de compte
+
+### 2. Créez un nouveau Zap
+- Dans le tableau de bord Zapier, cliquez sur "Create Zap"
+
+### 3. Configurez le déclencheur
+- Choisissez "Webhooks by Zapier" comme application déclencheur
+- Sélectionnez "Catch Hook" comme événement déclencheur
+- Configurez le webhook et copiez l'URL générée par Zapier
+
+### 4. Testez le déclencheur
+- Vous pouvez envoyer un test depuis votre application pour vérifier que Zapier reçoit les données
+
+### 5. Configurez l'action Discord
+- Choisissez "Discord" comme application d'action
+- Sélectionnez "Add Role to User" comme action
+- Connectez votre compte Discord si ce n'est pas déjà fait
+- Configurez les détails:
+  * Serveur: Sélectionnez votre serveur Discord
+  * Utilisateur: Utilisez la valeur reçue du webhook (discordUsername)
+  * Rôle: Sélectionnez le rôle à attribuer
+
+### 6. Testez l'action
+- Testez l'action pour vérifier que tout fonctionne correctement
+
+### 7. Activez le Zap
+- Si les tests sont réussis, activez le Zap
+
+### 8. Utilisez dans votre application
+- Utilisez la fonction assignRoleViaZapier() avec l'URL du webhook Zapier
+- Stockez cette URL dans les paramètres de votre application
+
+## Avantages de cette approche:
+- Pas besoin de gérer un serveur backend
+- Pas besoin de stocker de tokens Discord sensibles
+- Configuration relativement simple
+- Extensible pour d'autres actions (notifications, e-mails, etc.)
+
+## Limitations:
+- Nombre limité d'exécutions sur les plans gratuits de Zapier
+- Latence potentielle dans le traitement des demandes
+- Moins de contrôle sur la logique d'attribution des rôles
+- Nécessite que l'utilisateur Discord soit déjà sur le serveur
 `;
 };

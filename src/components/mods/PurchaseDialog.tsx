@@ -8,13 +8,16 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogDescription,
-  DialogFooter
+  DialogFooter,
+  DialogTabs,
+  DialogTab
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Settings, AlertCircle, Info, Server, UserCheck, Code, ExternalLink } from 'lucide-react';
+import { Shield, Settings, AlertCircle, Info, Server, UserCheck, Code, ExternalLink, Zap } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Label } from '@/components/ui/label';
-import { assignDiscordRole } from '@/utils/discordIntegration';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { assignDiscordRole, assignRoleViaZapier, getZapierImplementationGuide } from '@/utils/discordIntegration';
 
 interface PurchaseDialogProps {
   isOpen: boolean;
@@ -35,11 +38,15 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [discordToken, setDiscordToken] = useState('');
   const [serverId, setServerId] = useState('');
   const [roleId, setRoleId] = useState('');
+  const [zapierWebhookUrl, setZapierWebhookUrl] = useState('');
+  const [selectedMethod, setSelectedMethod] = useState('zapier'); // 'zapier' ou 'backend'
   const [userId, setUserId] = useState<string | null>(null);
   const [isUserVerified, setIsUserVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [apiResult, setApiResult] = useState<string | null>(null);
   const [showBackendInfo, setShowBackendInfo] = useState(false);
+  const [showZapierInfo, setShowZapierInfo] = useState(false);
+  const [zapierGuide, setZapierGuide] = useState('');
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   
@@ -48,13 +55,27 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     const storedDiscordToken = localStorage.getItem('discord-bot-token') || '';
     const storedServerId = localStorage.getItem('discord-server-id') || '';
     const storedRoleId = localStorage.getItem('discord-role-id') || '';
+    const storedZapierWebhook = localStorage.getItem('zapier-webhook-url') || '';
+    const storedMethod = localStorage.getItem('discord-integration-method') || 'zapier';
+    
     setDiscordToken(storedDiscordToken);
     setServerId(storedServerId);
     setRoleId(storedRoleId);
+    setZapierWebhookUrl(storedZapierWebhook);
+    setSelectedMethod(storedMethod);
   }, [isOpen]);
   
+  // Charger le guide d'implémentation Zapier
+  useEffect(() => {
+    if (showZapierInfo) {
+      setZapierGuide(getZapierImplementationGuide());
+    }
+  }, [showZapierInfo]);
+  
   // Vérification de la configuration
-  const isConfigured = discordToken && serverId && roleId;
+  const isBackendConfigured = discordToken && serverId && roleId;
+  const isZapierConfigured = zapierWebhookUrl && zapierWebhookUrl.includes('zapier.com');
+  const isConfigured = selectedMethod === 'zapier' ? isZapierConfigured : isBackendConfigured;
   
   // Fonction pour vérifier l'utilisateur Discord
   const verifyDiscordUser = async () => {
@@ -70,7 +91,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     if (!isConfigured) {
       toast({
         title: "Configuration incomplète",
-        description: "La configuration Discord n'est pas complète. Contactez l'administrateur.",
+        description: "La configuration n'est pas complète. Contactez l'administrateur.",
         variant: "destructive",
       });
       return;
@@ -82,9 +103,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setApiResult(null);
     
     try {
-      // Simuler une vérification directe car l'API Discord ne peut pas être appelée directement du navigateur
-      // Dans un environnement réel, cela devrait passer par un backend
-      
       // Vérifier si c'est une entrée plausible (simple validation)
       if (discordUsername.length < 2 || (discordUsername.includes(' ') && !discordUsername.includes('#'))) {
         throw new Error("Format de nom d'utilisateur Discord invalide");
@@ -93,16 +111,15 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       // Simule un délai de recherche d'utilisateur
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // En situation réelle, cela devrait être fait via un backend
-      // Ici, on simule une réussite pour démontrer l'interface
-      // On assigne un faux ID
+      // En situation réelle avec Zapier, on ne peut pas vérifier l'utilisateur à l'avance
+      // On attribue simplement un ID simulé
       const simulatedUserId = `user_${Date.now()}`;
       setUserId(simulatedUserId);
       setIsUserVerified(true);
       
       toast({
-        title: "Utilisateur vérifié",
-        description: `L'utilisateur ${discordUsername} a été validé et peut recevoir le rôle.`,
+        title: "Utilisateur accepté",
+        description: `Le nom d'utilisateur ${discordUsername} a été validé.`,
       });
     } catch (error) {
       console.error('Error verifying Discord user:', error);
@@ -116,9 +133,58 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     }
   };
 
-  // Fonction pour attribuer un rôle à un utilisateur Discord
-  const assignRoleToUser = async (userId: string): Promise<boolean> => {
-    if (!isConfigured) {
+  // Fonction pour attribuer un rôle via Zapier
+  const assignRoleWithZapier = async (): Promise<boolean> => {
+    if (!isZapierConfigured) {
+      toast({
+        title: "Webhook Zapier manquant",
+        description: "L'URL du webhook Zapier n'est pas configurée",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      const result = await assignRoleViaZapier(discordUsername, zapierWebhookUrl);
+      
+      // Afficher les détails de l'opération
+      const operationDetails = 
+        `Tentative d'attribution de rôle via Zapier:\n` +
+        `Utilisateur: ${discordUsername}\n` +
+        `Webhook: ${zapierWebhookUrl.substring(0, 20)}...\n\n` +
+        `Résultat: ${result.message}`;
+      
+      setApiResult(operationDetails);
+      
+      if (!result.success) {
+        toast({
+          title: "Échec de l'envoi à Zapier",
+          description: result.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      toast({
+        title: "Demande envoyée",
+        description: "Votre demande a été envoyée à Zapier. Vérifiez votre Discord pour confirmer l'attribution du rôle.",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error with Zapier:', error);
+      toast({
+        title: "Erreur Zapier",
+        description: error instanceof Error ? error.message : "Erreur lors de l'envoi de la demande à Zapier",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Fonction pour attribuer un rôle via le backend
+  const assignRoleWithBackend = async (userId: string): Promise<boolean> => {
+    if (!isBackendConfigured) {
       toast({
         title: "Erreur de configuration",
         description: "Les paramètres Discord ne sont pas tous configurés",
@@ -143,7 +209,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       
       setApiResult(operationDetails);
       
-      // Notifier l'utilisateur du résultat
       if (!result.success) {
         toast({
           title: "Impossible d'attribuer le rôle",
@@ -153,7 +218,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         return false;
       }
       
-      // En cas de succès simulé, afficher une notification
       toast({
         title: "Attribution simulée",
         description: result.message,
@@ -187,17 +251,19 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Attribuer le rôle à l'utilisateur
-      const success = await assignRoleToUser(userId);
+      let success = false;
+      
+      // Utiliser la méthode sélectionnée
+      if (selectedMethod === 'zapier') {
+        success = await assignRoleWithZapier();
+      } else {
+        success = await assignRoleWithBackend(userId);
+      }
       
       if (success) {
-        // Ne pas fermer la boîte de dialogue immédiatement pour permettre à l'utilisateur de voir le résultat
-        // setIsOpen(false);
-        
-        // Afficher un message pour informer l'utilisateur de la simulation
         toast({
           title: "Achat traité",
-          description: `Vous avez acheté ${modTitle}. Attribution de rôle simulée pour ${discordUsername}.`,
+          description: `Vous avez acheté ${modTitle}. Attribution de rôle envoyée pour ${discordUsername}.`,
         });
       } else {
         throw new Error('Échec de l\'attribution du rôle Discord');
@@ -222,10 +288,12 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     localStorage.setItem('discord-bot-token', discordToken);
     localStorage.setItem('discord-server-id', serverId);
     localStorage.setItem('discord-role-id', roleId);
+    localStorage.setItem('zapier-webhook-url', zapierWebhookUrl);
+    localStorage.setItem('discord-integration-method', selectedMethod);
     
     toast({
       title: "Paramètres enregistrés",
-      description: "Les paramètres Discord ont été mis à jour avec succès",
+      description: "Les paramètres d'intégration ont été mis à jour avec succès",
     });
     
     setShowSettings(false);
@@ -293,7 +361,14 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 )}
               </div>
               
-              {serverId && (
+              {selectedMethod === 'zapier' && zapierWebhookUrl && (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Zap className="h-3 w-3" /> 
+                  Intégration: Zapier
+                </div>
+              )}
+              
+              {selectedMethod === 'backend' && serverId && (
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                   <Server className="h-3 w-3" /> 
                   Serveur configuré: {serverId}
@@ -312,37 +387,69 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 </div>
               )}
               
-              <div className="bg-red-500/10 p-3 rounded-md flex items-start space-x-2 cursor-pointer" onClick={() => setShowBackendInfo(!showBackendInfo)}>
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-red-500 flex items-center justify-between">
-                    <span>Attention: Backend requis</span>
-                    <span className="text-xs">{showBackendInfo ? "▲" : "▼"}</span>
-                  </p>
-                  {showBackendInfo && (
-                    <div className="text-xs text-gray-500 mt-2 space-y-2">
-                      <p>
-                        L'attribution de rôles Discord nécessite un serveur backend pour:
-                      </p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Contourner les restrictions CORS</li>
-                        <li>Protéger votre token Discord</li>
-                        <li>Effectuer les appels API de manière sécurisée</li>
-                      </ul>
-                      <p className="pt-1">
-                        Cette application simule le processus mais ne peut pas attribuer de rôles réels sans un backend.
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 text-blue-500">
-                        <Code className="h-4 w-4" />
-                        <a href="https://discord.com/developers/docs/topics/oauth2" target="_blank" rel="noopener noreferrer" className="text-blue-500 flex items-center">
-                          Documentation Discord API
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
+              {selectedMethod === 'zapier' ? (
+                <div className="bg-blue-500/10 p-3 rounded-md flex items-start space-x-2 cursor-pointer" 
+                     onClick={() => setShowZapierInfo(!showZapierInfo)}>
+                  <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-500 flex items-center justify-between">
+                      <span>Information: Intégration Zapier</span>
+                      <span className="text-xs">{showZapierInfo ? "▲" : "▼"}</span>
+                    </p>
+                    {showZapierInfo && (
+                      <div className="text-xs text-gray-500 mt-2 space-y-2">
+                        <p>
+                          Cette application utilise Zapier pour attribuer des rôles Discord:
+                        </p>
+                        <ul className="list-disc pl-4 space-y-1">
+                          <li>Automatise l'attribution de rôles sans backend</li>
+                          <li>Nécessite une configuration simple dans Zapier</li>
+                          <li>L'utilisateur doit déjà être membre du serveur Discord</li>
+                        </ul>
+                        <div className="flex items-center gap-2 mt-2 text-blue-500">
+                          <ExternalLink className="h-4 w-4" />
+                          <a href="https://zapier.com/apps/discord/integrations" target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                            Intégrations Discord sur Zapier
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-red-500/10 p-3 rounded-md flex items-start space-x-2 cursor-pointer" 
+                     onClick={() => setShowBackendInfo(!showBackendInfo)}>
+                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-500 flex items-center justify-between">
+                      <span>Attention: Backend requis</span>
+                      <span className="text-xs">{showBackendInfo ? "▲" : "▼"}</span>
+                    </p>
+                    {showBackendInfo && (
+                      <div className="text-xs text-gray-500 mt-2 space-y-2">
+                        <p>
+                          L'attribution de rôles Discord nécessite un serveur backend pour:
+                        </p>
+                        <ul className="list-disc pl-4 space-y-1">
+                          <li>Contourner les restrictions CORS</li>
+                          <li>Protéger votre token Discord</li>
+                          <li>Effectuer les appels API de manière sécurisée</li>
+                        </ul>
+                        <p className="pt-1">
+                          Cette application simule le processus mais ne peut pas attribuer de rôles réels sans un backend.
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 text-blue-500">
+                          <Code className="h-4 w-4" />
+                          <a href="https://discord.com/developers/docs/topics/oauth2" target="_blank" rel="noopener noreferrer" className="text-blue-500 flex items-center">
+                            Documentation Discord API
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {apiResult && (
                 <div className="bg-blue-500/10 p-3 rounded-md overflow-auto max-h-40 text-xs font-mono">
@@ -356,7 +463,9 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                   <span>{modPrice}</span>
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  ⚠️ Cette application nécessite un backend pour attribuer réellement des rôles Discord.
+                  {selectedMethod === 'zapier' 
+                    ? "Une fois l'achat complété, le rôle Discord sera attribué via Zapier."
+                    : "⚠️ Cette application nécessite un backend pour attribuer réellement des rôles Discord."}
                 </p>
               </div>
               
@@ -391,74 +500,179 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 Paramètres d'intégration Discord
               </DialogTitle>
               <DialogDescription>
-                Configurez vos paramètres d'intégration Discord pour l'attribution des rôles.
+                Configurez les paramètres d'intégration pour l'attribution des rôles Discord.
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={handleSaveSettings} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="discordToken">Token du Bot Discord</Label>
-                <Input
-                  id="discordToken"
-                  type="password"
-                  value={discordToken}
-                  onChange={(e) => setDiscordToken(e.target.value)}
-                  placeholder="Votre token de bot Discord"
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-400 text-justify">
-                  Entrez le token de votre bot Discord. Il sera stocké en toute sécurité dans votre navigateur.
-                  Ne partagez jamais ce token publiquement.
-                </p>
-              </div>
+            <Tabs defaultValue={selectedMethod} className="mt-4" onValueChange={setSelectedMethod}>
+              <TabsList className="grid grid-cols-2 mb-4">
+                <TabsTrigger value="zapier">
+                  <Zap className="h-4 w-4 mr-2" />
+                  Zapier
+                </TabsTrigger>
+                <TabsTrigger value="backend">
+                  <Server className="h-4 w-4 mr-2" />
+                  Backend
+                </TabsTrigger>
+              </TabsList>
               
-              <div className="space-y-2">
-                <Label htmlFor="serverId">ID du Serveur Discord</Label>
-                <Input
-                  id="serverId"
-                  value={serverId}
-                  onChange={(e) => setServerId(e.target.value)}
-                  placeholder="ID de votre serveur Discord"
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-400">
-                  Entrez l'ID de votre serveur Discord (clic droit sur le serveur → Copier l'ID).
-                </p>
-              </div>
+              <TabsContent value="zapier" className="mt-0">
+                <form onSubmit={handleSaveSettings} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="zapierWebhookUrl">URL du Webhook Zapier</Label>
+                    <Input
+                      id="zapierWebhookUrl"
+                      value={zapierWebhookUrl}
+                      onChange={(e) => setZapierWebhookUrl(e.target.value)}
+                      placeholder="https://hooks.zapier.com/hooks/catch/..."
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-400 text-justify">
+                      Entrez l'URL du webhook fournie par Zapier. Cette URL sera utilisée pour envoyer les demandes d'attribution de rôles.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-blue-500/10 p-3 rounded-md flex items-start space-x-2">
+                    <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-500">Avantages de Zapier</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        L'intégration Zapier vous permet d'attribuer des rôles Discord sans avoir à créer et maintenir un backend personnalisé. C'est la solution la plus simple pour connecter votre application à Discord.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-xs p-0 h-auto mt-1 text-blue-500"
+                        onClick={() => setShowZapierInfo(true)}
+                      >
+                        Voir le guide d'implémentation Zapier
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter className="pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowSettings(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">
+                      Enregistrer les paramètres
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </TabsContent>
               
-              <div className="space-y-2">
-                <Label htmlFor="roleId">ID du Rôle Discord</Label>
-                <Input
-                  id="roleId"
-                  value={roleId}
-                  onChange={(e) => setRoleId(e.target.value)}
-                  placeholder="ID du rôle à attribuer"
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-400">
-                  Entrez l'ID du rôle à attribuer après l'achat (Paramètres du serveur → Rôles → clic droit sur le rôle → Copier l'ID).
-                </p>
-              </div>
-              
-              <div className="bg-blue-500/10 p-3 rounded-md flex items-start space-x-2">
-                <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-blue-500">Note importante</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    En environnement de production, les appels à l'API Discord devraient être effectués depuis un backend pour éviter les restrictions CORS et protéger votre token. Cette version est uniquement une simulation.
-                  </p>
+              <TabsContent value="backend" className="mt-0">
+                <form onSubmit={handleSaveSettings} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="discordToken">Token du Bot Discord</Label>
+                    <Input
+                      id="discordToken"
+                      type="password"
+                      value={discordToken}
+                      onChange={(e) => setDiscordToken(e.target.value)}
+                      placeholder="Votre token de bot Discord"
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-400 text-justify">
+                      Entrez le token de votre bot Discord. Il sera stocké en toute sécurité dans votre navigateur.
+                      Ne partagez jamais ce token publiquement.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="serverId">ID du Serveur Discord</Label>
+                    <Input
+                      id="serverId"
+                      value={serverId}
+                      onChange={(e) => setServerId(e.target.value)}
+                      placeholder="ID de votre serveur Discord"
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-400">
+                      Entrez l'ID de votre serveur Discord (clic droit sur le serveur → Copier l'ID).
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="roleId">ID du Rôle Discord</Label>
+                    <Input
+                      id="roleId"
+                      value={roleId}
+                      onChange={(e) => setRoleId(e.target.value)}
+                      placeholder="ID du rôle à attribuer"
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-400">
+                      Entrez l'ID du rôle à attribuer après l'achat (Paramètres du serveur → Rôles → clic droit sur le rôle → Copier l'ID).
+                    </p>
+                  </div>
+                  
+                  <div className="bg-red-500/10 p-3 rounded-md flex items-start space-x-2">
+                    <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-red-500">Attention importante</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Les appels à l'API Discord depuis un navigateur ne fonctionnent pas en raison des restrictions CORS. Cette configuration est fournie uniquement à des fins de simulation. Pour une utilisation réelle, vous devez mettre en place un backend.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <DialogFooter className="pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowSettings(false)}>
+                      Annuler
+                    </Button>
+                    <Button type="submit">
+                      Enregistrer les paramètres
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </TabsContent>
+            </Tabs>
+            
+            <Dialog open={showZapierInfo} onOpenChange={setShowZapierInfo}>
+              <DialogContent className="sm:max-w-[750px] max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    Guide d'Implémentation Zapier pour Discord
+                  </DialogTitle>
+                  <DialogDescription>
+                    Instructions pour mettre en place l'attribution de rôles via Zapier
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="bg-blue-500/10 p-3 rounded-md flex items-start space-x-2 mb-4">
+                  <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-500">Solution simplifiée</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Zapier vous permet d'attribuer des rôles Discord sans avoir à développer un backend personnalisé. C'est la solution la plus simple pour connecter votre application à Discord.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowSettings(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit">
-                  Enregistrer les paramètres
-                </Button>
-              </DialogFooter>
-            </form>
+                
+                <div className="font-mono text-sm bg-gray-900 text-gray-300 p-4 rounded-md overflow-x-auto whitespace-pre-wrap">
+                  {zapierGuide}
+                </div>
+                
+                <div className="flex items-center gap-2 mt-4">
+                  <ExternalLink className="h-4 w-4 text-blue-500" />
+                  <a 
+                    href="https://zapier.com/apps/discord/integrations" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    Intégrations Discord sur Zapier
+                  </a>
+                </div>
+                
+                <DialogFooter className="mt-4">
+                  <Button onClick={() => setShowZapierInfo(false)}>
+                    Fermer
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </>
         )}
       </DialogContent>
