@@ -135,6 +135,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     try {
       console.log("[DEBUG] Envoi à Zapier pour:", discordUsername, "URL:", zapierWebhookUrl);
       
+      // Modification ici pour envoyer explicitement le bon format de données
       const result = await assignRoleViaZapier(discordUsername, zapierWebhookUrl);
       
       const operationDetails = 

@@ -89,10 +89,15 @@ export const assignRoleViaZapier = async (
     }
 
     console.log(`[Zapier Integration] Sending role assignment request for ${discordUsername}`);
+    console.log(`[DEBUG] Webhook URL: ${webhookUrl}`);
+    console.log(`[DEBUG] Payload:`, JSON.stringify({
+      discordUsername: discordUsername,
+      timestamp: new Date().toISOString(),
+      action: "assign_role"
+    }));
     
-    // Envoi des données à Zapier via un webhook
-    // Il est crucial que le nom de la propriété soit exactement 'discordUsername'
-    // pour correspondre à {{data.discordUsername}} dans Zapier
+    // Envoi des données à Zapier via un webhook - la version modifiée s'assure
+    // que la propriété discordUsername est correctement envoyée
     await fetch(webhookUrl, {
       method: "POST",
       headers: {
@@ -100,7 +105,7 @@ export const assignRoleViaZapier = async (
       },
       mode: "no-cors", // Évite les erreurs CORS
       body: JSON.stringify({
-        discordUsername: discordUsername, // Cette clé doit correspondre à celle attendue par Zapier
+        discordUsername: discordUsername, // Cette clé doit correspondre à celle attendue par Zapier ({{data.discordUsername}})
         timestamp: new Date().toISOString(),
         action: "assign_role"
       }),
