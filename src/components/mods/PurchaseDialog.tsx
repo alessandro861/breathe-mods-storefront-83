@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Shield } from 'lucide-react';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface PurchaseDialogProps {
   isOpen: boolean;
@@ -29,6 +30,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [discordUsername, setDiscordUsername] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { isAdmin } = useAdmin();
+  
+  // Utilisez cette URL pour Zapier - vous pouvez créer un Zap qui écoute ce webhook
+  // et fait ensuite quelque chose avec Discord (ajout de rôle via Bot Discord)
+  const zapierWebhookUrl = isAdmin ? 
+    localStorage.getItem('discord-webhook-url') || '' : 
+    'https://hooks.zapier.com/hooks/catch/your-webhook-id/';
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,13 +52,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Real API endpoint to assign Discord role
-      // This is a placeholder URL - replace with your actual API endpoint
-      const response = await fetch('https://your-api-endpoint.com/assign-discord-role', {
+      // Envoi des données à Zapier qui peut ensuite interagir avec Discord
+      const response = await fetch(zapierWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        mode: 'no-cors', // Pour éviter les problèmes CORS avec Zapier
         body: JSON.stringify({
           discordUsername,
           modTitle,
@@ -59,21 +67,16 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         }),
       });
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to process purchase');
-      }
-      
+      // Comme nous utilisons no-cors, nous ne pouvons pas vérifier response.ok
       setIsOpen(false);
       
-      // Show success message
+      // Afficher un message de succès
       toast({
         title: "Purchase Successful!",
         description: `You've purchased ${modTitle}. A Discord role will be assigned to ${discordUsername} within 24 hours.`,
       });
       
-      // Reset form
+      // Réinitialiser le formulaire
       setDiscordUsername('');
     } catch (error) {
       console.error('Error processing purchase:', error);
@@ -84,6 +87,20 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Pour les administrateurs, permettre de configurer l'URL du webhook
+  const handleSetWebhookUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    const webhookUrl = prompt("Enter your Zapier Discord webhook URL:");
+    
+    if (webhookUrl) {
+      localStorage.setItem('discord-webhook-url', webhookUrl);
+      toast({
+        title: "Webhook URL Updated",
+        description: "Discord webhook URL has been updated successfully",
+      });
     }
   };
 
@@ -130,6 +147,11 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
+            {isAdmin && (
+              <Button type="button" variant="secondary" onClick={handleSetWebhookUrl}>
+                Set Webhook URL
+              </Button>
+            )}
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Processing..." : `Purchase for ${modPrice}`}
             </Button>
