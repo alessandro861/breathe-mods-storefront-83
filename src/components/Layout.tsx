@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
@@ -12,11 +11,10 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
-  // Define navigation items
+  // Define navigation items without Paid Mods
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/free-mods', label: 'Mods' },
-    { path: '/paid-mods', label: 'Paid Mods' },
     { path: '/rules', label: 'Rules' },
     { path: '/request', label: 'Request Mod' },
   ];
