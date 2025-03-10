@@ -11,9 +11,10 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Settings, AlertCircle, Info, Server, UserCheck } from 'lucide-react';
+import { Shield, Settings, AlertCircle, Info, Server, UserCheck, Code, ExternalLink } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Label } from '@/components/ui/label';
+import { assignDiscordRole } from '@/utils/discordIntegration';
 
 interface PurchaseDialogProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [isUserVerified, setIsUserVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [apiResult, setApiResult] = useState<string | null>(null);
+  const [showBackendInfo, setShowBackendInfo] = useState(false);
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   
@@ -126,42 +128,37 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     }
 
     try {
-      // Dans un environnement réel, cet appel devrait être fait via un backend
-      // Le CORS empêche les appels directs à l'API Discord depuis le navigateur
+      // Tenter d'attribuer le rôle via la fonction d'intégration
+      const result = await assignDiscordRole(discordUsername, serverId, roleId, discordToken);
       
-      // Informations sur la simulation
-      const simulationDetails = 
-        `⚠️ SIMULATION UNIQUEMENT ⚠️\n` +
+      // Afficher les détails de l'opération
+      const operationDetails = 
+        `Tentative d'attribution de rôle:\n` +
         `Serveur: ${serverId}\n` +
-        `Utilisateur: ${userId}\n` +
+        `Utilisateur: ${discordUsername}\n` +
         `Rôle: ${roleId}\n\n` +
-        `En environnement de production, cette opération nécessite un backend pour contourner les restrictions CORS.`;
+        `Résultat: ${result.message}\n\n` +
+        `⚠️ IMPORTANT: L'attribution de rôles nécessite un backend!\n` +
+        `Les appels directs à l'API Discord depuis le navigateur sont bloqués par CORS.`;
       
-      setApiResult(simulationDetails);
+      setApiResult(operationDetails);
       
-      // Log de simulation pour référence
-      console.log(`Simulation: Rôle ${roleId} attribué à l'utilisateur ${userId} sur le serveur ${serverId}`);
-      
-      // En situation réelle, le code ressemblerait à ceci:
-      /*
-      const response = await fetch('https://votre-backend.com/api/assign-discord-role', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: discordUsername,
-          serverId: serverId,
-          roleId: roleId
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur lors de l\'attribution du rôle Discord');
+      // Notifier l'utilisateur du résultat
+      if (!result.success) {
+        toast({
+          title: "Impossible d'attribuer le rôle",
+          description: result.message,
+          variant: "destructive",
+        });
+        return false;
       }
       
-      const data = await response.json();
-      // Traiter la réponse
-      */
+      // En cas de succès simulé, afficher une notification
+      toast({
+        title: "Attribution simulée",
+        description: result.message,
+        variant: "default",
+      });
       
       return true;
     } catch (error) {
@@ -197,13 +194,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         // Ne pas fermer la boîte de dialogue immédiatement pour permettre à l'utilisateur de voir le résultat
         // setIsOpen(false);
         
-        // Afficher un message de succès
+        // Afficher un message pour informer l'utilisateur de la simulation
         toast({
-          title: "Achat simulé avec succès",
-          description: `Vous avez acheté ${modTitle}. Dans un environnement de production, un rôle Discord aurait été attribué à ${discordUsername}.`,
+          title: "Achat traité",
+          description: `Vous avez acheté ${modTitle}. Attribution de rôle simulée pour ${discordUsername}.`,
         });
       } else {
-        throw new Error('Échec de la simulation d\'attribution du rôle Discord');
+        throw new Error('Échec de l\'attribution du rôle Discord');
       }
     } catch (error) {
       console.error('Error processing purchase:', error);
@@ -315,6 +312,38 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 </div>
               )}
               
+              <div className="bg-red-500/10 p-3 rounded-md flex items-start space-x-2 cursor-pointer" onClick={() => setShowBackendInfo(!showBackendInfo)}>
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-500 flex items-center justify-between">
+                    <span>Attention: Backend requis</span>
+                    <span className="text-xs">{showBackendInfo ? "▲" : "▼"}</span>
+                  </p>
+                  {showBackendInfo && (
+                    <div className="text-xs text-gray-500 mt-2 space-y-2">
+                      <p>
+                        L'attribution de rôles Discord nécessite un serveur backend pour:
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1">
+                        <li>Contourner les restrictions CORS</li>
+                        <li>Protéger votre token Discord</li>
+                        <li>Effectuer les appels API de manière sécurisée</li>
+                      </ul>
+                      <p className="pt-1">
+                        Cette application simule le processus mais ne peut pas attribuer de rôles réels sans un backend.
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 text-blue-500">
+                        <Code className="h-4 w-4" />
+                        <a href="https://discord.com/developers/docs/topics/oauth2" target="_blank" rel="noopener noreferrer" className="text-blue-500 flex items-center">
+                          Documentation Discord API
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
               {apiResult && (
                 <div className="bg-blue-500/10 p-3 rounded-md overflow-auto max-h-40 text-xs font-mono">
                   <pre className="whitespace-pre-wrap">{apiResult}</pre>
@@ -327,7 +356,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                   <span>{modPrice}</span>
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  ⚠️ Version de démonstration: Dans un environnement de production, cette application nécessiterait un backend pour communiquer avec l'API Discord.
+                  ⚠️ Cette application nécessite un backend pour attribuer réellement des rôles Discord.
                 </p>
               </div>
               
@@ -438,4 +467,3 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
 };
 
 export default PurchaseDialog;
-
