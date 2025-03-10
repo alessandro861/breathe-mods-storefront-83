@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -430,14 +431,34 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
 
+  // Extract YouTube video ID from the URL if it's the Capture Flag mod
+  const getYoutubeVideoId = (url: string): string | null => {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([\w-]{11})/);
+    return match ? match[1] : null;
+  };
+
+  const isCaptureFlagMod = mod.title === "Capture Flag";
+  const youtubeId = isCaptureFlagMod ? getYoutubeVideoId(mod.url) : null;
+
   return (
     <Card className="h-full flex flex-col bg-card/40 backdrop-blur-sm border-white/10 shadow-xl hover:shadow-primary/5 transition-all duration-300">
       <div className="relative h-48 overflow-hidden rounded-t-lg">
-        <img
-          src={mod.image || '/placeholder.svg'}
-          alt={mod.title}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-        />
+        {isCaptureFlagMod && youtubeId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&controls=1&rel=0`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="w-full h-full object-cover"
+            title={mod.title}
+          />
+        ) : (
+          <img
+            src={mod.image || '/placeholder.svg'}
+            alt={mod.title}
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          />
+        )}
         {mod.isPaid && (
           <div className="absolute top-2 right-2 bg-primary/90 text-white px-2 py-1 rounded-md text-xs font-medium">
             PAID
@@ -463,11 +484,11 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
             className="w-full text-sm"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            {mod.isPaid ? "View Preview" : "View on Workshop"}
+            {mod.isPaid ? "View Full Video" : "View on Workshop"}
           </Button>
         </a>
         
-        {mod.title === "Capture Flag" && (
+        {isCaptureFlagMod && (
           <Button 
             variant="outline" 
             className="w-full text-sm"
@@ -540,7 +561,7 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
         modPrice={mod.repackPrice}
       />
 
-      {mod.title === "Capture Flag" && (
+      {isCaptureFlagMod && (
         <ConfigDialog 
           isOpen={showConfigDialog}
           setIsOpen={setShowConfigDialog}
