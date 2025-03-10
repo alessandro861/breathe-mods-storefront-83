@@ -30,7 +30,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handlePurchase = (e: React.FormEvent) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!discordUsername) {
       toast({
@@ -43,9 +43,28 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
 
     setIsSubmitting(true);
     
-    // Simulate API call to process purchase and assign Discord role
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Real API endpoint to assign Discord role
+      // This is a placeholder URL - replace with your actual API endpoint
+      const response = await fetch('https://your-api-endpoint.com/assign-discord-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          discordUsername,
+          modTitle,
+          modPrice,
+          purchaseDate: new Date().toISOString()
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process purchase');
+      }
+      
       setIsOpen(false);
       
       // Show success message
@@ -56,7 +75,16 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       
       // Reset form
       setDiscordUsername('');
-    }, 1500);
+    } catch (error) {
+      console.error('Error processing purchase:', error);
+      toast({
+        title: "Purchase Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
