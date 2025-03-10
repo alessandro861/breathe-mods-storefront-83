@@ -40,7 +40,7 @@ const initialPaidMods = [
     image: "/lovable-uploads/efd47a0f-a1d2-4ba9-9247-4980de10939d.png",
     description: "Engage in intense capture the flag battles at the airfield. Features team-based gameplay, custom flags, and special capture points.",
     url: "https://www.youtube.com/watch?v=z8jlj59gg2Y",
-    repackPrice: "15€",
+    repackPrice: "Basic Price 45€<br/>Buying EMP with Capture Flag Price 65€",
     isPaid: true
   }
 ];

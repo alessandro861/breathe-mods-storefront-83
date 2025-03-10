@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -448,7 +449,7 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
       <CardContent className="py-4 flex-grow">
         <h3 className="text-xl font-bold mb-2 text-shine">{mod.title}</h3>
         <p className="text-sm text-gray-300 mb-2">{mod.description}</p>
-        <p className="text-primary font-semibold mt-2">Repack Price: {mod.repackPrice}</p>
+        <p className="text-primary font-semibold mt-2" dangerouslySetInnerHTML={{ __html: mod.repackPrice }}></p>
       </CardContent>
       
       <CardFooter className="pt-0 pb-4 flex flex-wrap gap-2">
