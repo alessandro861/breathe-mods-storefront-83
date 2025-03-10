@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Plus, Flag, Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import ModCard, { Mod } from '@/components/mods/ModCard';
 import ModForm from '@/components/mods/ModForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PurchaseDialog from '@/components/mods/PurchaseDialog';
 import DiscordSettings from '@/components/mods/DiscordSettings';
 
 const initialFreeMods = [
@@ -51,8 +50,6 @@ const FreeMods = () => {
   const [modDialogOpen, setModDialogOpen] = useState(false);
   const [currentMod, setCurrentMod] = useState<Mod | null>(null);
   const [activeTab, setActiveTab] = useState("free");
-  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
-  const [selectedMod, setSelectedMod] = useState<Mod | null>(null);
   const [discordSettingsOpen, setDiscordSettingsOpen] = useState(false);
   
   const [freeMods, setFreeMods] = useState<Mod[]>(() => {
@@ -207,15 +204,6 @@ const FreeMods = () => {
             )}
           </div>
         </div>
-
-        {selectedMod && (
-          <PurchaseDialog
-            isOpen={purchaseDialogOpen}
-            setIsOpen={setPurchaseDialogOpen}
-            modTitle={selectedMod.title}
-            modPrice={selectedMod.repackPrice}
-          />
-        )}
         
         <DiscordSettings 
           isOpen={discordSettingsOpen}
@@ -225,10 +213,7 @@ const FreeMods = () => {
         <Tabs defaultValue="free" value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="free">Free Mods</TabsTrigger>
-            <TabsTrigger value="paid" className="flex items-center gap-2">
-              <Flag className="h-4 w-4" />
-              Paid Mods
-            </TabsTrigger>
+            <TabsTrigger value="paid">Paid Mods</TabsTrigger>
           </TabsList>
           
           <TabsContent value="free" className="mt-6">

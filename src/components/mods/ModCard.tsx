@@ -30,7 +30,6 @@ interface ModCardProps {
   isAdmin: boolean;
   onEdit?: (mod: Mod) => void;
   onDelete?: (id: number) => void;
-  onPurchase?: (mod: Mod) => void;
 }
 
 const captureConfig = {
@@ -426,7 +425,7 @@ const captureConfig = {
   }
 };
 
-const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPurchase }) => {
+const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -479,13 +478,13 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
           </Button>
         )}
         
-        {mod.isPaid && onPurchase && (
+        {mod.isPaid && (
           <Button 
             variant="default" 
-            size="sm" 
-            className="w-full md:w-auto"
-            onClick={() => onPurchase(mod)}
+            className="w-full text-sm"
+            onClick={() => setShowPurchaseDialog(true)}
           >
+            <ShoppingCart className="h-4 w-4 mr-2" />
             Buy Now
           </Button>
         )}
@@ -496,7 +495,7 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
               variant="outline" 
               size="sm" 
               className="flex-1"
-              onClick={() => onEdit(mod)}
+              onClick={() => onEdit && onEdit(mod)}
             >
               <Edit className="h-4 w-4 mr-2" />
               Edit
@@ -526,7 +525,7 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => onDelete(mod.id)}
+              onClick={() => onDelete && onDelete(mod.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
