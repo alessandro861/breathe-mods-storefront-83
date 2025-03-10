@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2, ExternalLink, ShoppingCart } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, ShoppingCart, FileCode2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +13,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import PurchaseDialog from './PurchaseDialog';
+import ConfigDialog from './ConfigDialog';
 
 export interface Mod {
   id: number;
@@ -32,9 +32,403 @@ interface ModCardProps {
   onDelete: (id: number) => void;
 }
 
+const captureConfig = {
+  "Notifications": {
+    "EnableEventNotifications": 1,
+    "TitleNotification": "Захват Территории",
+    "EarlyNotification": "Скоро начнётся новый ивент Захват Территории ",
+    "SpawnNotification": "Захват Территории начался на локации ",
+    "EndingNotification": "Захват Территори  закончился на локации ",
+    "EndingPart2Notification": "вертолет направляется для доставки груза",
+    "InsideZoneNotification": "Вы находитесь внутри зоны захвата",
+    "OutsideZoneNotification": "Вы находитесь вне зоны захвата"
+  },
+  "EventGeneral": {
+    "MinPlayers": 1,
+    "NumberOfKOTHToSpawn": 1,
+    "DelayBetweenEarlyNotificationAndSpawn": 300,
+    "SpawnDelay": 1200,
+    "DeleteCrateTimer": 1200,
+    "ZoneProgressionIncrease": 0.5,
+    "ZoneProgressionDecrease": 0.5,
+    "RadioLifeTime": 1600
+  },
+  "Mines": {
+    "EnableMineSpawn": 1,
+    "MineSpawnRadius": 75.0,
+    "MineSpawnInterval": 60,
+    "MineNumberPerInterval": 1,
+    "MineTypes": [
+      "BMCaptureMine",
+      "BMCaptureBearTrap"
+    ]
+  },
+  "HelicopterSettings": {
+    "HelicopterHeight": 200.0,
+    "HelicopterSpeed": 60.0
+  },
+  "Locations": [
+    {
+      "LocationName": "Североград",
+      "LocationPosition": [
+        7735.709961,
+        119.878998,
+        12636.599609
+      ],
+      "ZoneRadius": 75.0,
+      "SpawnChance": 100.0,
+      "Mapping": [
+        {
+          "ClassName": "EMPObject",
+          "Position": [7723.200195, 118.439003, 12647.700195],
+          "Orientation": [49.411278, 0.000000, -0.000000]
+        }
+      ],
+      "FlagPosition": [
+        7737.299316,
+        130.124359,
+        12640.844727
+      ],
+      "FlagClassName": "BMCaptureFlag",
+      "HelicopterLandingPosition": [
+        7755.639160,
+        119.968071,
+        12544.791016
+      ]
+    },
+    {
+      "LocationName": "Военная база 'Сосновка'",
+      "LocationPosition": [
+        2697.050049,
+        364.535004,
+        6751.810059
+      ],
+      "ZoneRadius": 75.0,
+      "SpawnChance": 100.0,
+      "Mapping": [
+        {
+          "ClassName": "EMPObject",
+          "Position": [2658.110107, 362.937012, 6760.810059],
+          "Orientation": [38.610546, 0.000000, -0.000000]
+        }
+      ],
+      "FlagPosition": [
+        2697.144775,
+        363.701904,
+        6755.262207
+      ],
+      "FlagClassName": "BMCaptureFlag",
+      "HelicopterLandingPosition": [
+        2660.255859,
+        362.971954,
+        6758.993164
+      ]
+    },
+    {
+      "LocationName": "Военная база 'Балота'",
+      "LocationPosition": [
+        4936.850098,
+        10.739300,
+        2481.620117
+      ],
+      "ZoneRadius": 75.0,
+      "SpawnChance": 100.0,
+      "Mapping": [
+        {
+          "ClassName": "EMPObject",
+          "Position": [4975.200195, 9.467340, 2459.250000],
+          "Orientation": [-63.183510, 0.000000, 0.000000]
+        }
+      ],
+      "FlagPosition": [
+        2660.255859,
+        9.511921,
+        2478.715332
+      ],
+      "FlagClassName": "BMCaptureFlag",
+      "HelicopterLandingPosition": [
+        4979.812988,
+        9.511916,
+        2506.176758
+      ]
+    },
+    {
+      "LocationName": "Военная база 'Старое'",
+      "LocationPosition": [
+        10441.400391,
+        283.984985,
+        5956.029785
+      ],
+      "ZoneRadius": 75.0,
+      "SpawnChance": 100.0,
+      "Mapping": [
+        {
+          "ClassName": "EMPObject",
+          "Position": [10413.700195, 283.868011, 5938.850098],
+          "Orientation": [-129.148468, 0.000000, -0.000000]
+        }
+      ],
+      "FlagPosition": [
+        10452.589844,
+        283.033600,
+        5953.009277
+      ],
+      "FlagClassName": "BMCaptureFlag",
+      "HelicopterLandingPosition": [
+        10381.267578,
+        282.179840,
+        5916.229980
+      ]
+    },
+    {
+      "LocationName": "Военная база 'Вересник'",
+      "LocationPosition": [
+        4505.979980,
+        321.812988,
+        8263.940430
+      ],
+      "ZoneRadius": 75.0,
+      "SpawnChance": 100.0,
+      "Mapping": [
+        {
+          "ClassName": "EMPObject",
+          "Position": [4555.089844, 317.576996, 8273.339844],
+          "Orientation": [-120.958069, 0.000000, -0.000000]
+        }
+      ],
+      "FlagPosition": [
+        4515.600586,
+        316.199097,
+        8279.964844
+      ],
+      "FlagClassName": "BMCaptureFlag",
+      "HelicopterLandingPosition": [
+        4522.343262,
+        314.937500,
+        8187.429199
+      ]
+    }
+  ],
+  "LootSettings": [
+    {
+      "Item": "Fan_SV98",
+      "QuantityMin": 1,
+      "QuantityMax": 1,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": [
+        {
+          "AttachmentName": "HuntingOptic",
+          "QuantityMin": 1,
+          "QuantityMax": 1,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        },
+        {
+          "AttachmentName": "Fan_Mag_SV98_7rnd",
+          "QuantityMin": 1,
+          "QuantityMax": 1,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        }
+      ]
+    },
+    {
+      "Item": "Fan_Mag_SV98_7rnd",
+      "QuantityMin": 2,
+      "QuantityMax": 2,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "AmmoBox",
+      "QuantityMin": 2,
+      "QuantityMax": 2,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": [
+        {
+          "AttachmentName": "Fan_AmmoBox_338LM_10rnd",
+          "QuantityMin": 2,
+          "QuantityMax": 2,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        },
+        {
+          "AttachmentName": "AmmoBox_762x54_20Rnd",
+          "QuantityMin": 12,
+          "QuantityMax": 12,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        }
+      ]
+    },
+    {
+      "Item": "BM_Medicines_BandageArmy",
+      "QuantityMin": 1,
+      "QuantityMax": 2,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "BM_Medicines_AI2",
+      "QuantityMin": 2,
+      "QuantityMax": 2,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "BM_Medicines_GoldStar",
+      "QuantityMin": 1,
+      "QuantityMax": 2,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "RA_C4",
+      "QuantityMin": 0,
+      "QuantityMax": 1,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "FOG_Vest_Thor_Green",
+      "QuantityMin": 1,
+      "QuantityMax": 1,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "FOG_Bag_6ShBagT_Green",
+      "QuantityMin": 0,
+      "QuantityMax": 1,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "Fan_MP7A1_Mag_40Rnd",
+      "QuantityMin": 2,
+      "QuantityMax": 4,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "Fan_Ammo_46_30",
+      "QuantityMin": 2,
+      "QuantityMax": 4,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": []
+    },
+    {
+      "Item": "TF_Maska1Helmet",
+      "QuantityMin": 1,
+      "QuantityMax": 2,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": [
+        {
+          "AttachmentName": "TF_Maska1SchVisor",
+          "QuantityMin": 1,
+          "QuantityMax": 1,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        }
+      ]
+    },
+    {
+      "Item": "Fan_MP7A1",
+      "QuantityMin": 1,
+      "QuantityMax": 1,
+      "HealthMin": 100.0,
+      "HealthMax": 100.0,
+      "Chance": 100.0,
+      "Attachments": [
+        {
+          "AttachmentName": "Fan_MP7A1_Mag_40Rnd",
+          "QuantityMin": 1,
+          "QuantityMax": 1,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        },
+        {
+          "AttachmentName": "M68Optic",
+          "QuantityMin": 1,
+          "QuantityMax": 1,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        },
+        {
+          "AttachmentName": "Battery9V",
+          "QuantityMin": 1,
+          "QuantityMax": 1,
+          "HealthMin": 100.0,
+          "HealthMax": 100.0,
+          "Chance": 100.0,
+          "Attachments": []
+        }
+      ]
+    }
+  ],
+  "ZombieSettings": {
+    "EnableZombieSpawn": 1,
+    "Zombies": [
+      {
+        "ZombieClassName": "ZmbM_SoldierNormal",
+        "QuantityMin": 10,
+        "QuantityMax": 25,
+        "HealthMin": 80.0,
+        "HealthMax": 120.0,
+        "SpawnChance": 100.0,
+        "SpawnRadius": 75.0,
+        "Attachments": []
+      }
+    ]
+  },
+  "AnimalSettings": {
+    "EnableAnimalSpawn": 0,
+    "Animals": []
+  }
+};
+
 const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
 
   return (
     <Card className="h-full flex flex-col bg-card/40 backdrop-blur-sm border-white/10 shadow-xl hover:shadow-primary/5 transition-all duration-300">
@@ -72,6 +466,17 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
             {mod.isPaid ? "View Preview" : "View on Workshop"}
           </Button>
         </a>
+        
+        {mod.title === "Capture Flag" && (
+          <Button 
+            variant="outline" 
+            className="w-full text-sm"
+            onClick={() => setShowConfigDialog(true)}
+          >
+            <FileCode2 className="h-4 w-4 mr-2" />
+            View Config
+          </Button>
+        )}
         
         {mod.isPaid && (
           <Button 
@@ -134,6 +539,14 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
         modTitle={mod.title}
         modPrice={mod.repackPrice}
       />
+
+      {mod.title === "Capture Flag" && (
+        <ConfigDialog 
+          isOpen={showConfigDialog}
+          setIsOpen={setShowConfigDialog}
+          config={captureConfig}
+        />
+      )}
     </Card>
   );
 };
