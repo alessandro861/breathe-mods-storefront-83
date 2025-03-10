@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -9,8 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useToast } from '@/hooks/use-toast';
 import ModCard, { Mod } from '@/components/mods/ModCard';
 import ModForm from '@/components/mods/ModForm';
+import PurchaseDialog from '@/components/mods/PurchaseDialog';
 
-// Initial mods data
 const initialPaidMods = [
   {
     id: 3,
@@ -28,14 +27,14 @@ const PaidMods = () => {
   const { toast } = useToast();
   const [modDialogOpen, setModDialogOpen] = useState(false);
   const [currentMod, setCurrentMod] = useState<Mod | null>(null);
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [selectedMod, setSelectedMod] = useState<Mod | null>(null);
   
-  // Use localStorage to persist mods across page reloads
   const [paidMods, setPaidMods] = useState<Mod[]>(() => {
     const savedMods = localStorage.getItem('breathe-paid-mods');
     return savedMods ? JSON.parse(savedMods) : initialPaidMods;
   });
 
-  // Ensure localStorage has the initial data if it's empty
   useEffect(() => {
     if (!localStorage.getItem('breathe-paid-mods')) {
       localStorage.setItem('breathe-paid-mods', JSON.stringify(initialPaidMods));
@@ -43,13 +42,11 @@ const PaidMods = () => {
     }
   }, []);
 
-  // Save mods to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('breathe-paid-mods', JSON.stringify(paidMods));
   }, [paidMods]);
 
   const handleAddMod = (newMod: Omit<Mod, 'id'>) => {
-    // Generate a new ID by finding the maximum existing ID and adding 1
     const maxId = paidMods.reduce((max, mod) => Math.max(max, mod.id), 0);
     const modWithId = { ...newMod, id: maxId + 1, isPaid: true };
     
@@ -98,6 +95,11 @@ const PaidMods = () => {
     setCurrentMod(null);
   };
 
+  const handlePurchase = (mod: Mod) => {
+    setSelectedMod(mod);
+    setPurchaseDialogOpen(true);
+  };
+
   return (
     <Layout>
       <motion.div
@@ -140,6 +142,15 @@ const PaidMods = () => {
           )}
         </div>
 
+        {selectedMod && (
+          <PurchaseDialog
+            isOpen={purchaseDialogOpen}
+            setIsOpen={setPurchaseDialogOpen}
+            modTitle={selectedMod.title}
+            modPrice={selectedMod.repackPrice}
+          />
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {paidMods.map((mod) => (
             <ModCard
@@ -148,6 +159,7 @@ const PaidMods = () => {
               isAdmin={isAdmin}
               onEdit={handleEditMod}
               onDelete={handleDeleteMod}
+              onPurchase={handlePurchase}
             />
           ))}
           

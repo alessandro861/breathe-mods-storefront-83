@@ -30,6 +30,7 @@ interface ModCardProps {
   isAdmin: boolean;
   onEdit?: (mod: Mod) => void;
   onDelete?: (id: number) => void;
+  onPurchase?: (mod: Mod) => void; // Added onPurchase prop
 }
 
 const captureConfig = {
@@ -425,7 +426,7 @@ const captureConfig = {
   }
 };
 
-const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => {
+const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPurchase }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -482,7 +483,7 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
           <Button 
             variant="default" 
             className="w-full text-sm"
-            onClick={() => setShowPurchaseDialog(true)}
+            onClick={() => onPurchase ? onPurchase(mod) : setShowPurchaseDialog(true)}
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Buy Now
@@ -534,12 +535,15 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
         </AlertDialogContent>
       </AlertDialog>
       
-      <PurchaseDialog 
-        isOpen={showPurchaseDialog} 
-        setIsOpen={setShowPurchaseDialog}
-        modTitle={mod.title}
-        modPrice={mod.repackPrice}
-      />
+      {/* Only show internal purchase dialog if onPurchase is not provided */}
+      {!onPurchase && (
+        <PurchaseDialog 
+          isOpen={showPurchaseDialog} 
+          setIsOpen={setShowPurchaseDialog}
+          modTitle={mod.title}
+          modPrice={mod.repackPrice}
+        />
+      )}
 
       {mod.title === "Capture Flag" && (
         <ConfigDialog 
