@@ -17,7 +17,7 @@ const NavButton: React.FC<NavButtonProps> = ({
   label, 
   icon, 
   delay = 0, 
-  comingSoon = to !== '/rules' && to !== '/free-mods' 
+  comingSoon = to !== '/rules' && to !== '/free-mods' && to !== '/wip'
 }) => {
   return (
     <motion.div

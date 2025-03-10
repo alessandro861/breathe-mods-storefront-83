@@ -11,6 +11,7 @@ import PaidMods from "./pages/PaidMods";
 import NotFound from "./pages/NotFound";
 import Rules from "./pages/Rules";
 import Request from "./pages/Request";
+import WorkInProgress from "./pages/WorkInProgress";
 import { AdminProvider } from "./hooks/useAdmin";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/free-mods" element={<FreeMods />} />
               <Route path="/paid-mods" element={<PaidMods />} />
               <Route path="/request" element={<Request />} />
+              <Route path="/wip" element={<WorkInProgress />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>

@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
+import { Construction } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,12 +13,13 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   
-  // Define navigation items without Paid Mods
+  // Define navigation items including Work in Progress
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/free-mods', label: 'Mods' },
     { path: '/rules', label: 'Rules' },
     { path: '/request', label: 'Request Mod' },
+    { path: '/wip', label: 'Work in Progress', icon: <Construction className="h-4 w-4 mr-1" /> },
   ];
   
   return (
@@ -60,12 +63,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`px-4 py-2 rounded-lg transition-all duration-300 ${
+                      className={`px-4 py-2 rounded-lg transition-all duration-300 flex items-center ${
                         location.pathname === item.path
                           ? 'bg-primary/20 text-white font-medium'
                           : 'hover:bg-white/5 text-gray-300 hover:text-white'
                       }`}
                     >
+                      {item.icon && item.icon}
                       {item.label}
                     </Link>
                   ))}
