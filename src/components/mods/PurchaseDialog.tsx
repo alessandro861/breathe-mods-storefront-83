@@ -135,14 +135,16 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     try {
       console.log("[DEBUG] Envoi à Zapier pour:", discordUsername, "URL:", zapierWebhookUrl);
       
-      // Modification ici pour envoyer explicitement le bon format de données
       const result = await assignRoleViaZapier(discordUsername, zapierWebhookUrl);
       
       const operationDetails = 
         `Tentative d'attribution de rôle via Zapier:\n` +
         `Utilisateur: ${discordUsername}\n` +
         `Webhook: ${zapierWebhookUrl.substring(0, 20)}...\n\n` +
-        `Résultat: ${result.message}`;
+        `Résultat: ${result.message}\n\n` +
+        `Note: Si vous recevez une erreur "User" manquant dans Zapier,\n` +
+        `assurez-vous d'utiliser {{discord_user.user_id}} comme ID utilisateur\n` +
+        `et {{discord_user.username}} comme nom d'utilisateur dans votre Zap.`;
       
       setApiResult(operationDetails);
       
@@ -520,17 +522,21 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                   <div className="bg-blue-500/10 p-3 rounded-md flex items-start space-x-2">
                     <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-blue-500">Avantages de Zapier</p>
+                      <p className="text-sm font-medium text-blue-500">Configuration Zapier</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        L'intégration Zapier vous permet d'attribuer des rôles Discord sans avoir à développer un backend personnalisé. C'est la solution la plus simple pour connecter votre application à Discord.
+                        Lors de la configuration de votre Zap pour Discord, utilisez les champs suivants:
                       </p>
+                      <ul className="text-xs text-gray-500 list-disc pl-5 mt-1">
+                        <li><b>User ID</b>: utiliser <code>{'{{discord_user.user_id}}'}</code></li>
+                        <li><b>Username</b>: utiliser <code>{'{{discord_user.username}}'}</code></li>
+                      </ul>
                       <Button
                         type="button"
                         variant="link"
                         className="text-xs p-0 h-auto mt-1 text-blue-500"
                         onClick={() => setShowZapierInfo(true)}
                       >
-                        Voir le guide d'implémentation Zapier
+                        Voir le guide complet d'implémentation Zapier
                       </Button>
                     </div>
                   </div>

@@ -1,4 +1,3 @@
-
 /**
  * Fonction d'intégration Discord pour l'attribution de rôles
  * 
@@ -242,12 +241,14 @@ Zapier peut servir d'intermédiaire entre votre application et Discord, ce qui v
 - Connectez votre compte Discord si ce n'est pas déjà fait
 - Configurez les détails:
   * Serveur: Sélectionnez votre serveur Discord
-  * Utilisateur: Utilisez la valeur reçue du webhook ({{webhook.data.discordUsername}})
+  * User ID: ⚠️ IMPORTANT - Utilisez \`{{discord_user.user_id}}\` 
+  * Username (optionnel): Utilisez \`{{discord_user.username}}\`
   * Rôle: Sélectionnez le rôle à attribuer
 
 ### 5. Testez votre Zap
 - Cliquez sur "Test & Continue" pour vérifier que tout fonctionne
 - Zapier vous demandera d'envoyer des données à votre webhook pour tester
+- Si vous recevez une erreur "Required field User (user_id) is missing", vérifiez que vous utilisez bien \`{{discord_user.user_id}}\` comme indiqué ci-dessus
 
 ### 6. Activez votre Zap
 - Une fois testé avec succès, activez votre Zap
@@ -256,10 +257,13 @@ Zapier peut servir d'intermédiaire entre votre application et Discord, ce qui v
 - Utilisez l'URL du webhook dans votre application
 - Configurez-la dans les paramètres d'intégration Discord
 
-## Exemple de structure de données à envoyer:
+## Exemple de structure de données envoyée à Zapier:
 \`\`\`json
 {
-  "discordUsername": "Utilisateur#1234",
+  "discord_user": {
+    "username": "Utilisateur#1234",
+    "user_id": "Utilisateur1234_1689512345678"
+  },
   "timestamp": "2023-06-15T12:34:56Z",
   "action": "assign_role"
 }
@@ -268,7 +272,8 @@ Zapier peut servir d'intermédiaire entre votre application et Discord, ce qui v
 ## Points importants:
 - L'utilisateur doit déjà être membre du serveur Discord
 - Zapier a des limites sur le nombre de tâches par mois selon votre forfait
-- Le nom d'utilisateur Discord doit être exact (avec le discriminant si applicable)
+- Le nom d'utilisateur Discord doit être exact
+- Utilisez toujours \`{{discord_user.user_id}}\` pour le champ User ID dans Zapier
 `;
 };
 
