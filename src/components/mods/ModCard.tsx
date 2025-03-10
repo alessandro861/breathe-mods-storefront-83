@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,8 +28,9 @@ export interface Mod {
 interface ModCardProps {
   mod: Mod;
   isAdmin: boolean;
-  onEdit: (mod: Mod) => void;
-  onDelete: (id: number) => void;
+  onEdit?: (mod: Mod) => void;
+  onDelete?: (id: number) => void;
+  onPurchase?: (mod: Mod) => void;
 }
 
 const captureConfig = {
@@ -426,7 +426,7 @@ const captureConfig = {
   }
 };
 
-const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => {
+const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPurchase }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -479,13 +479,14 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => 
           </Button>
         )}
         
-        {mod.isPaid && (
+        {mod.isPaid && onPurchase && (
           <Button 
-            className="w-full text-sm bg-primary hover:bg-primary/90"
-            onClick={() => setShowPurchaseDialog(true)}
+            variant="default" 
+            size="sm" 
+            className="w-full md:w-auto"
+            onClick={() => onPurchase(mod)}
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Purchase Now
+            Buy Now
           </Button>
         )}
         

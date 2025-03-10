@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Plus, Flag } from 'lucide-react';
+import { Plus, Flag, Settings } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -10,8 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import ModCard, { Mod } from '@/components/mods/ModCard';
 import ModForm from '@/components/mods/ModForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PurchaseDialog from '@/components/mods/PurchaseDialog';
+import DiscordSettings from '@/components/mods/DiscordSettings';
 
-// Initial mods data
 const initialFreeMods = [
   {
     id: 1,
@@ -51,8 +51,10 @@ const FreeMods = () => {
   const [modDialogOpen, setModDialogOpen] = useState(false);
   const [currentMod, setCurrentMod] = useState<Mod | null>(null);
   const [activeTab, setActiveTab] = useState("free");
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [selectedMod, setSelectedMod] = useState<Mod | null>(null);
+  const [discordSettingsOpen, setDiscordSettingsOpen] = useState(false);
   
-  // Use localStorage to persist mods across page reloads
   const [freeMods, setFreeMods] = useState<Mod[]>(() => {
     const savedMods = localStorage.getItem('breathe-free-mods');
     return savedMods ? JSON.parse(savedMods) : initialFreeMods;
@@ -63,7 +65,6 @@ const FreeMods = () => {
     return savedMods ? JSON.parse(savedMods) : initialPaidMods;
   });
 
-  // Ensure localStorage has the initial data if it's empty
   useEffect(() => {
     if (!localStorage.getItem('breathe-paid-mods')) {
       localStorage.setItem('breathe-paid-mods', JSON.stringify(initialPaidMods));
@@ -71,7 +72,6 @@ const FreeMods = () => {
     }
   }, []);
 
-  // Save mods to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('breathe-free-mods', JSON.stringify(freeMods));
   }, [freeMods]);
@@ -84,7 +84,6 @@ const FreeMods = () => {
     const targetMods = newMod.isPaid ? paidMods : freeMods;
     const setTargetMods = newMod.isPaid ? setPaidMods : setFreeMods;
     
-    // Generate a new ID by finding the maximum existing ID and adding 1
     const maxId = [...freeMods, ...paidMods].reduce((max, mod) => Math.max(max, mod.id), 0);
     const modWithId = { ...newMod, id: maxId + 1 };
     
@@ -105,19 +104,15 @@ const FreeMods = () => {
   const handleUpdateMod = (updatedMod: Omit<Mod, 'id'>) => {
     if (!currentMod) return;
     
-    // If the paid status changed, we need to remove from one array and add to the other
     if (updatedMod.isPaid !== currentMod.isPaid) {
       if (updatedMod.isPaid) {
-        // Moving from free to paid
         setFreeMods(freeMods.filter(mod => mod.id !== currentMod.id));
         setPaidMods([...paidMods, { ...updatedMod, id: currentMod.id }]);
       } else {
-        // Moving from paid to free
         setPaidMods(paidMods.filter(mod => mod.id !== currentMod.id));
         setFreeMods([...freeMods, { ...updatedMod, id: currentMod.id }]);
       }
     } else {
-      // Same category, just update
       if (updatedMod.isPaid) {
         setPaidMods(paidMods.map(mod => 
           mod.id === currentMod.id ? { ...updatedMod, id: currentMod.id } : mod
@@ -139,7 +134,6 @@ const FreeMods = () => {
   };
 
   const handleDeleteMod = (id: number) => {
-    // Check which array contains the mod
     const isInFreeMods = freeMods.some(mod => mod.id === id);
     
     if (isInFreeMods) {
@@ -171,35 +165,62 @@ const FreeMods = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-shine">DayZ Mods</h1>
           
-          {isAdmin && (
-            <Dialog open={modDialogOpen} onOpenChange={setModDialogOpen}>
-              <DialogTrigger asChild>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <>
                 <Button 
-                  onClick={() => setCurrentMod(null)}
-                  className="interactive-button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setDiscordSettingsOpen(true)}
+                  title="Discord Settings"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New Mod
+                  <Settings className="h-4 w-4" />
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[550px]">
-                <DialogHeader>
-                  <DialogTitle>
-                    {currentMod ? "Edit Mod" : "Add New Mod"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {currentMod ? "Edit the details of your mod" : "Add a new mod to your collection"}
-                  </DialogDescription>
-                </DialogHeader>
-                <ModForm 
-                  mod={currentMod || undefined}
-                  onSubmit={currentMod ? handleUpdateMod : handleAddMod}
-                  onCancel={handleCancelEdit}
-                />
-              </DialogContent>
-            </Dialog>
-          )}
+                
+                <Dialog open={modDialogOpen} onOpenChange={setModDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      onClick={() => setCurrentMod(null)}
+                      className="interactive-button"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add New Mod
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[550px]">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {currentMod ? "Edit Mod" : "Add New Mod"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {currentMod ? "Edit the details of your mod" : "Add a new mod to your collection"}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <ModForm 
+                      mod={currentMod || undefined}
+                      onSubmit={currentMod ? handleUpdateMod : handleAddMod}
+                      onCancel={handleCancelEdit}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
+          </div>
         </div>
+
+        {selectedMod && (
+          <PurchaseDialog
+            isOpen={purchaseDialogOpen}
+            setIsOpen={setPurchaseDialogOpen}
+            modTitle={selectedMod.title}
+            modPrice={selectedMod.repackPrice}
+          />
+        )}
+        
+        <DiscordSettings 
+          isOpen={discordSettingsOpen}
+          setIsOpen={setDiscordSettingsOpen}
+        />
 
         <Tabs defaultValue="free" value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
