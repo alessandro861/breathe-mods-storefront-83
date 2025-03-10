@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Construction, Sofa } from 'lucide-react';
@@ -59,13 +58,6 @@ const WorkInProgress = () => {
                 <div className="p-4">
                   <h3 className="font-medium text-lg mb-1">Complete Workshop Set</h3>
                   <p className="text-sm text-gray-300">Modular cabinet system with integrated workbench and tool storage</p>
-                  <div className="mt-2">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-xs">Development</span>
-                      <span className="text-xs">75%</span>
-                    </div>
-                    <Progress value={75} className="h-1" />
-                  </div>
                 </div>
               </div>
               
@@ -78,13 +70,6 @@ const WorkInProgress = () => {
                 <div className="p-4">
                   <h3 className="font-medium text-lg mb-1">Storage Systems</h3>
                   <p className="text-sm text-gray-300">Industrial grade cabinets and shelving units with customizable interiors</p>
-                  <div className="mt-2">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-xs">Development</span>
-                      <span className="text-xs">60%</span>
-                    </div>
-                    <Progress value={60} className="h-1" />
-                  </div>
                 </div>
               </div>
               
@@ -96,14 +81,7 @@ const WorkInProgress = () => {
                 />
                 <div className="p-4">
                   <h3 className="font-medium text-lg mb-1">Wall Panel Systems</h3>
-                  <p className="text-sm text-gray-300">Modular wall panels with mounting options for tools and accessories</p>
-                  <div className="mt-2">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-xs">Development</span>
-                      <span className="text-xs">80%</span>
-                    </div>
-                    <Progress value={80} className="h-1" />
-                  </div>
+                  <p className="text-sm text-gray-300">Modular wall panels with mounting options for weapons</p>
                 </div>
               </div>
               
@@ -116,22 +94,12 @@ const WorkInProgress = () => {
                 <div className="p-4">
                   <h3 className="font-medium text-lg mb-1">Component System</h3>
                   <p className="text-sm text-gray-300">Individual furniture components for custom arrangements and setups</p>
-                  <div className="mt-2">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-xs">Development</span>
-                      <span className="text-xs">45%</span>
-                    </div>
-                    <Progress value={45} className="h-1" />
-                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="w-full max-w-xl mt-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="text-center text-sm text-gray-300">
-                <span className="text-primary font-medium">Furniture mod release estimated for Q3 2023</span> 
-                <br />High-quality industrial furniture sets with customizable features.
-              </p>
+            <div className="w-full max-w-xl mt-6">
+              <Progress value={65} className="h-2" />
             </div>
           </div>
         </div>
