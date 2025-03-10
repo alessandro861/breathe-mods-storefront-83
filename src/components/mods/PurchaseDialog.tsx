@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Send, Flag, DollarSign } from 'lucide-react';
+import { Shield, Send, Flag, DollarSign, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -83,8 +83,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       const selectedPrice = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
       
       let notificationSent = false;
+      let webhookError = false;
       
-      if (discordWebhookUrl) {
+      // Check if webhook URL is configured
+      if (!discordWebhookUrl) {
+        console.warn("Discord webhook URL is not configured");
+        webhookError = true;
+      } else {
         // Create message with mention
         const message = createDiscordPurchaseMessage(
           modTitle,
@@ -96,23 +101,35 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         
         console.log("Sending Discord notification with user mention...");
         notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
-      } else {
-        console.error("Discord webhook URL is not configured");
+        
+        if (!notificationSent) {
+          webhookError = true;
+        }
       }
       
       // Simulate processing time (in a real app, this would be your payment processing)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Show appropriate toast message
       if (notificationSent) {
         toast({
           title: "Purchase processed",
           description: `You have purchased ${modTitle} (${selectedPrice}). A notification has been sent to our Discord.`,
         });
       } else {
-        // Still allow purchase even if notification fails
         toast({
           title: "Purchase processed",
-          description: `You have purchased ${modTitle} (${selectedPrice}). (Note: Discord notification could not be sent)`,
+          description: (
+            <div className="flex flex-col gap-2">
+              <p>You have purchased {modTitle} ({selectedPrice}).</p>
+              {webhookError && (
+                <div className="flex items-center gap-2 text-amber-500 bg-amber-50 p-2 rounded-md text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Discord notification could not be sent. Please check Discord settings.</span>
+                </div>
+              )}
+            </div>
+          ),
         });
       }
       
@@ -222,6 +239,18 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 <div className="flex justify-between font-medium">
                   <span>Price:</span>
                   <span dangerouslySetInnerHTML={{ __html: modPrice }}></span>
+                </div>
+              </div>
+            )}
+            
+            {!discordWebhookUrl && (
+              <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+                <div className="flex items-start gap-2 text-amber-700">
+                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Discord notification not configured</p>
+                    <p className="text-sm">The admin needs to configure Discord webhook settings.</p>
+                  </div>
                 </div>
               </div>
             )}

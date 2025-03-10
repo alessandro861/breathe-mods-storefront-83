@@ -1,13 +1,13 @@
 
 /**
- * Utilitaires pour l'intégration Discord
+ * Discord integration utilities
  */
 
 /**
- * Envoie une notification à un webhook Discord
- * @param webhookUrl - URL du webhook Discord
- * @param message - Message à envoyer (objet qui sera converti en JSON)
- * @returns Promise<boolean> - true si succès, false sinon
+ * Sends a notification to a Discord webhook
+ * @param webhookUrl - Discord webhook URL
+ * @param message - Message to send (object that will be converted to JSON)
+ * @returns Promise<boolean> - true if success, false if failure
  */
 export const sendDiscordWebhook = async (
   webhookUrl: string,
@@ -15,12 +15,18 @@ export const sendDiscordWebhook = async (
 ): Promise<boolean> => {
   try {
     if (!webhookUrl) {
-      console.error("L'URL du webhook Discord est requise");
+      console.error("Discord webhook URL is required");
       return false;
     }
 
-    console.log(`[Discord] Envoi d'une notification au webhook: ${webhookUrl}`);
-    console.log(`[Discord] Contenu:`, message);
+    // Check if it's a valid Discord webhook URL
+    if (!webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+      console.error("Invalid Discord webhook URL format");
+      return false;
+    }
+
+    console.log(`[Discord] Sending notification to webhook: ${webhookUrl.substring(0, 40)}...`);
+    console.log(`[Discord] Content:`, message);
 
     const response = await fetch(webhookUrl, {
       method: "POST",
@@ -31,21 +37,32 @@ export const sendDiscordWebhook = async (
     });
 
     if (response.ok) {
-      console.log('[Discord] Notification envoyée avec succès');
+      console.log('[Discord] Notification sent successfully');
       return true;
     } else {
-      console.error(`[Discord] Échec de l'envoi (${response.status}): ${await response.text()}`);
+      const errorText = await response.text();
+      console.error(`[Discord] Failed to send (${response.status}): ${errorText}`);
+      
+      // Log more details about the error for debugging
+      if (response.status === 429) {
+        console.error('[Discord] Rate limit exceeded. Try again later.');
+      } else if (response.status === 404) {
+        console.error('[Discord] Webhook not found. Check if the URL is correct.');
+      } else if (response.status === 400) {
+        console.error('[Discord] Bad request. Message format might be invalid.');
+      }
+      
       return false;
     }
   } catch (error) {
-    console.error('[Discord] Erreur lors de l\'envoi:', error);
+    console.error('[Discord] Error sending notification:', error);
     return false;
   }
 };
 
 /**
- * Fonction pour envoyer une demande d'attribution de rôle via Zapier
- * Cette méthode contourne les limitations CORS en utilisant Zapier comme intermédiaire
+ * Function to send a role assignment request via Zapier
+ * This method bypasses CORS limitations by using Zapier as an intermediary
  */
 export const assignRoleViaZapier = async (
   discordUsername: string,
@@ -53,22 +70,22 @@ export const assignRoleViaZapier = async (
 ): Promise<{ success: boolean; message: string }> => {
   try {
     if (!webhookUrl) {
-      throw new Error("L'URL du webhook Zapier est requise");
+      throw new Error("Zapier webhook URL is required");
     }
 
     if (!discordUsername) {
-      throw new Error("Le nom d'utilisateur Discord est requis");
+      throw new Error("Discord username is required");
     }
 
-    console.log(`[Zapier] Envoi d'une demande d'attribution de rôle pour ${discordUsername}`);
+    console.log(`[Zapier] Sending role assignment request for ${discordUsername}`);
     
-    // Envoi des données à Zapier via un webhook
+    // Send data to Zapier via a webhook
     await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      mode: "no-cors", // Pour éviter les erreurs CORS
+      mode: "no-cors", // To avoid CORS errors
       body: JSON.stringify({
         discordUsername: discordUsername,
         timestamp: new Date().toISOString(),
@@ -76,28 +93,28 @@ export const assignRoleViaZapier = async (
       }),
     });
 
-    // Avec mode: "no-cors", on ne peut pas vérifier la réponse
+    // With mode: "no-cors", we can't check the response
     return { 
       success: true, 
-      message: `Demande d'attribution de rôle envoyée pour ${discordUsername} via Zapier.` 
+      message: `Role assignment request sent for ${discordUsername} via Zapier.` 
     };
   } catch (error) {
-    console.error('[Zapier] Erreur:', error);
+    console.error('[Zapier] Error:', error);
     return { 
       success: false, 
-      message: error instanceof Error ? error.message : "Erreur lors de l'envoi de la demande à Zapier" 
+      message: error instanceof Error ? error.message : "Error sending request to Zapier" 
     };
   }
 };
 
 /**
- * Crée un message formaté pour Discord
- * @param modTitle - Titre du mod
- * @param discordUsername - Nom d'utilisateur Discord
- * @param serverIP - IP du serveur
- * @param price - Prix
- * @param pingUserId - ID utilisateur Discord à mentionner (optionnel)
- * @returns Object - Message formaté pour Discord
+ * Creates a formatted message for Discord
+ * @param modTitle - Mod title
+ * @param discordUsername - Discord username
+ * @param serverIP - Server IP
+ * @param price - Price
+ * @param pingUserId - Discord user ID to mention (optional)
+ * @returns Object - Formatted message for Discord
  */
 export const createDiscordPurchaseMessage = (
   modTitle: string,
@@ -106,9 +123,10 @@ export const createDiscordPurchaseMessage = (
   price: string,
   pingUserId?: string
 ) => {
-  let content = `**Nouvelle Commande: ${modTitle}**\nDiscord: ${discordUsername}\nServeur IP: ${serverIP}\nPrix: ${price.replace(/<br\/>/g, " - ")}`;
+  // Format the content with important information in bold
+  let content = `**New Order: ${modTitle}**\nDiscord: **${discordUsername}**\nServer IP: **${serverIP}**\nPrice: **${price.replace(/<br\/>/g, " - ")}**`;
   
-  // Ajouter une mention si un ID est fourni
+  // Add a mention if an ID is provided
   if (pingUserId) {
     content = `<@${pingUserId}> ${content}`;
   }
@@ -120,16 +138,16 @@ export const createDiscordPurchaseMessage = (
   };
 };
 
-// Instructions pour configurer un webhook Discord
+// Instructions for setting up a Discord webhook
 export const getDiscordWebhookInstructions = (): string => {
   return `
-# Configuration d'un webhook Discord
+# Setting up a Discord webhook
 
-1. Ouvrez votre serveur Discord
-2. Allez dans les paramètres du serveur > Intégrations > Webhooks
-3. Cliquez sur "Nouveau webhook"
-4. Donnez un nom au webhook (ex: "Notifications d'achat")
-5. Sélectionnez le canal où vous voulez recevoir les notifications
-6. Copiez l'URL du webhook et collez-la dans les paramètres Discord de l'application
+1. Open your Discord server
+2. Go to server settings > Integrations > Webhooks
+3. Click on "New webhook"
+4. Give the webhook a name (e.g., "Purchase Notifications")
+5. Select the channel where you want to receive notifications
+6. Copy the webhook URL and paste it in the Discord settings of the application
 `;
 };
