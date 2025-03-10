@@ -13,7 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MessageSquare, Save } from 'lucide-react';
-import { getZapierImplementationGuide } from '@/utils/discordIntegration';
+import { Textarea } from '@/components/ui/textarea';
+import { getDiscordWebhookInstructions } from '@/utils/discordIntegration';
 
 interface DiscordSettingsProps {
   isOpen: boolean;
@@ -33,19 +34,84 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
   const handleSave = () => {
     setIsSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Validate the URL format (basic check)
+      if (webhookUrl && !webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+        toast({
+          title: "Invalid webhook URL",
+          description: "Please enter a valid Discord webhook URL that starts with 'https://discord.com/api/webhooks/'",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+      
       // Save the webhook URL to localStorage
       localStorage.setItem('discord-webhook-url', webhookUrl);
       
-      setIsSaving(false);
+      // Show success message
       toast({
         title: "Settings saved",
-        description: "Discord webhook URL has been saved.",
+        description: "Discord webhook URL has been saved successfully.",
       });
       
+      // Close the dialog
       setIsOpen(false);
-    }, 800);
+    } catch (error) {
+      toast({
+        title: "Error saving settings",
+        description: "An error occurred while saving settings.",
+        variant: "destructive",
+      });
+      console.error("Error saving Discord settings:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookUrl) {
+      toast({
+        title: "No webhook URL",
+        description: "Please enter a Discord webhook URL first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Send test message
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: "🔔 **Test notification from Breathe DayZ Mods**\nIf you're seeing this, your webhook is configured correctly!",
+          username: "Breathe Test Bot",
+        }),
+      });
+      
+      if (response.ok) {
+        toast({
+          title: "Test successful",
+          description: "A test notification was sent to your Discord channel.",
+        });
+      } else {
+        toast({
+          title: "Test failed",
+          description: `Error: ${response.status} ${response.statusText}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Test failed",
+        description: "Could not connect to Discord. Check the URL and your internet connection.",
+        variant: "destructive",
+      });
+      console.error("Error testing webhook:", error);
+    }
   };
 
   return (
@@ -85,6 +151,18 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
               <li>Copy the webhook URL and paste it above</li>
             </ol>
           </div>
+          
+          <div className="pt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleTestWebhook}
+              className="w-full"
+              disabled={!webhookUrl}
+            >
+              Test Webhook
+            </Button>
+          </div>
         </div>
         
         <DialogFooter>
@@ -97,7 +175,7 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={isSaving || !webhookUrl}
+            disabled={isSaving}
             className="gap-2"
           >
             {isSaving ? "Saving..." : (

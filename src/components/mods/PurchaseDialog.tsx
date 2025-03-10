@@ -23,7 +23,6 @@ import { Shield, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { assignRoleViaZapier } from '@/utils/discordIntegration';
 
 // Define the form schema with validation
 const purchaseFormSchema = z.object({
@@ -53,7 +52,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // Get Discord webhook URL from localStorage instead of hardcoding it
+  // Get Discord webhook URL from localStorage
   const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
 
   // Initialize form with validation
@@ -77,39 +76,36 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         return false;
       }
 
-      // Format for Discord message
+      console.log("Sending to webhook URL:", discordWebhookUrl);
+      console.log("Form data:", formData);
+
+      // Format for Discord message - more direct approach for webhook
       const message = {
-        embeds: [{
-          title: `New Purchase: ${modTitle}`,
-          color: 0x5865F2, // Discord blue color
-          fields: [
-            {
-              name: "Discord Username",
-              value: formData.discordUsername,
-              inline: true
-            },
-            {
-              name: "Server IP",
-              value: formData.serverIP,
-              inline: true
-            },
-            {
-              name: "Price",
-              value: modPrice.replace(/<br\/>/g, " - "), // Remove HTML tags for Discord
-              inline: true
-            }
-          ],
-          timestamp: new Date().toISOString()
-        }]
+        content: `**New Purchase: ${modTitle}**\nDiscord: ${formData.discordUsername}\nServer IP: ${formData.serverIP}\nPrice: ${modPrice.replace(/<br\/>/g, " - ")}`,
+        username: "Mod Purchase Bot",
+        avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
       };
 
-      console.log(`Sending Discord notification to webhook: ${discordWebhookUrl}`);
       console.log("Message payload:", JSON.stringify(message));
 
-      // Use the updated webhook URL from localStorage
-      await assignRoleViaZapier(formData.discordUsername, discordWebhookUrl);
+      // Direct webhook approach - this is how Discord webhooks receive data
+      const response = await fetch(discordWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
 
-      return true;
+      console.log("Discord response status:", response.status);
+      if (response.ok) {
+        return true;
+      } else {
+        console.error("Discord webhook failed with status:", response.status);
+        const responseText = await response.text();
+        console.error("Response text:", responseText);
+        return false;
+      }
     } catch (error) {
       console.error("Failed to send Discord notification:", error);
       return false;
@@ -120,6 +116,9 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setIsSubmitting(true);
     
     try {
+      console.log("Processing purchase for mod:", modTitle);
+      console.log("User data:", data);
+      
       // Send Discord notification
       const notificationSent = await sendDiscordNotification(data);
       
