@@ -30,32 +30,120 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [discordUsername, setDiscordUsername] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState('');
   const [discordToken, setDiscordToken] = useState('');
+  const [serverId, setServerId] = useState('');
+  const [roleId, setRoleId] = useState('');
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   
   // Récupérer les données stockées au chargement du composant
   useEffect(() => {
     if (isAdmin) {
-      const storedWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
       const storedDiscordToken = localStorage.getItem('discord-bot-token') || '';
-      setWebhookUrl(storedWebhookUrl);
+      const storedServerId = localStorage.getItem('discord-server-id') || '';
+      const storedRoleId = localStorage.getItem('discord-role-id') || '';
       setDiscordToken(storedDiscordToken);
+      setServerId(storedServerId);
+      setRoleId(storedRoleId);
     }
   }, [isAdmin]);
   
-  // URL du webhook Zapier (par défaut ou configurée par l'admin)
-  const zapierWebhookUrl = isAdmin ? 
-    webhookUrl || 'https://hooks.zapier.com/hooks/catch/your-webhook-id/' : 
-    'https://hooks.zapier.com/hooks/catch/your-webhook-id/';
+  // Fonction pour récupérer l'ID utilisateur Discord à partir du nom d'utilisateur
+  const getDiscordUserId = async (username: string): Promise<string | null> => {
+    if (!discordToken) {
+      toast({
+        title: "Erreur de configuration",
+        description: "Le token Discord n'est pas configuré",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    try {
+      // Récupérer les membres du serveur
+      const response = await fetch(`https://discord.com/api/v10/guilds/${serverId}/members?limit=1000`, {
+        headers: {
+          Authorization: `Bot ${discordToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('Discord API error:', await response.text());
+        throw new Error('Erreur lors de la recherche de l\'utilisateur sur Discord');
+      }
+
+      const members = await response.json();
+      
+      // Chercher l'utilisateur par son nom complet (inclut le discriminant #1234 si présent)
+      const foundMember = members.find((member: any) => {
+        const memberUsername = member.user.username;
+        const memberGlobalName = member.user.global_name;
+        
+        return memberUsername === username || 
+               memberGlobalName === username ||
+               `${memberUsername}#${member.user.discriminator}` === username;
+      });
+
+      if (foundMember) {
+        return foundMember.user.id;
+      } else {
+        throw new Error('Utilisateur non trouvé sur ce serveur Discord');
+      }
+    } catch (error) {
+      console.error('Error finding Discord user:', error);
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Erreur lors de la recherche de l'utilisateur Discord",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  // Fonction pour attribuer un rôle à un utilisateur Discord
+  const assignRoleToUser = async (userId: string): Promise<boolean> => {
+    if (!discordToken || !serverId || !roleId) {
+      toast({
+        title: "Erreur de configuration",
+        description: "Les paramètres Discord ne sont pas tous configurés",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    try {
+      const response = await fetch(`https://discord.com/api/v10/guilds/${serverId}/members/${userId}/roles/${roleId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bot ${discordToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('Discord API error:', await response.text());
+        throw new Error('Erreur lors de l\'attribution du rôle Discord');
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error assigning Discord role:', error);
+      toast({
+        title: "Erreur",
+        description: error instanceof Error ? error.message : "Erreur lors de l'attribution du rôle Discord",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
 
   const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!discordUsername) {
       toast({
-        title: "Discord Username Required",
-        description: "Please enter your Discord username to receive your role",
+        title: "Nom d'utilisateur Discord requis",
+        description: "Veuillez saisir votre nom d'utilisateur Discord pour recevoir votre rôle",
         variant: "destructive",
       });
       return;
@@ -64,38 +152,35 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Envoi des données à Zapier qui peut ensuite interagir avec Discord
-      const response = await fetch(zapierWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'no-cors', // Pour éviter les problèmes CORS avec Zapier
-        body: JSON.stringify({
-          discordUsername,
-          modTitle,
-          modPrice,
-          discordToken: isAdmin ? discordToken : null, // Envoyer le token seulement si c'est un admin
-          purchaseDate: new Date().toISOString()
-        }),
-      });
+      // Récupérer l'ID utilisateur Discord
+      const userId = await getDiscordUserId(discordUsername);
       
-      // Comme nous utilisons no-cors, nous ne pouvons pas vérifier response.ok
-      setIsOpen(false);
+      if (!userId) {
+        throw new Error('Impossible de trouver cet utilisateur Discord');
+      }
       
-      // Afficher un message de succès
-      toast({
-        title: "Purchase Successful!",
-        description: `You've purchased ${modTitle}. A Discord role will be assigned to ${discordUsername} within 24 hours.`,
-      });
+      // Attribuer le rôle à l'utilisateur
+      const success = await assignRoleToUser(userId);
       
-      // Réinitialiser le formulaire
-      setDiscordUsername('');
+      if (success) {
+        setIsOpen(false);
+        
+        // Afficher un message de succès
+        toast({
+          title: "Achat réussi !",
+          description: `Vous avez acheté ${modTitle}. Un rôle Discord a été attribué à ${discordUsername}.`,
+        });
+        
+        // Réinitialiser le formulaire
+        setDiscordUsername('');
+      } else {
+        throw new Error('Échec de l\'attribution du rôle Discord');
+      }
     } catch (error) {
       console.error('Error processing purchase:', error);
       toast({
-        title: "Purchase Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: "Échec de l'achat",
+        description: error instanceof Error ? error.message : "Une erreur inattendue s'est produite",
         variant: "destructive",
       });
     } finally {
@@ -107,12 +192,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     
-    localStorage.setItem('discord-webhook-url', webhookUrl);
     localStorage.setItem('discord-bot-token', discordToken);
+    localStorage.setItem('discord-server-id', serverId);
+    localStorage.setItem('discord-role-id', roleId);
     
     toast({
-      title: "Settings Saved",
-      description: "Discord settings have been updated successfully",
+      title: "Paramètres enregistrés",
+      description: "Les paramètres Discord ont été mis à jour avec succès",
     });
     
     setShowSettings(false);
@@ -126,42 +212,42 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" /> 
-                Purchase {modTitle}
+                Acheter {modTitle}
               </DialogTitle>
               <DialogDescription>
-                Complete your purchase to receive this mod. A Discord role will be assigned to your account.
+                Complétez votre achat pour recevoir ce mod. Un rôle Discord sera attribué à votre compte.
               </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={handlePurchase} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <label htmlFor="discordUsername" className="text-sm font-medium">Discord Username</label>
+                <label htmlFor="discordUsername" className="text-sm font-medium">Nom d'utilisateur Discord</label>
                 <Input
                   id="discordUsername"
                   value={discordUsername}
                   onChange={(e) => setDiscordUsername(e.target.value)}
-                  placeholder="e.g. username#1234 or username"
+                  placeholder="ex: username ou username"
                   className="w-full"
                   required
                 />
                 <p className="text-xs text-gray-400">
-                  Enter your Discord username exactly as it appears in Discord.
+                  Entrez votre nom d'utilisateur Discord exactement tel qu'il apparaît dans Discord.
                 </p>
               </div>
               
               <div className="bg-primary/10 p-3 rounded-md">
                 <div className="flex justify-between font-medium">
-                  <span>Price:</span>
+                  <span>Prix:</span>
                   <span>{modPrice}</span>
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  After purchase, you'll receive a Discord role that grants access to the mod download.
+                  Après l'achat, vous recevrez un rôle Discord qui vous donnera accès au téléchargement du mod.
                 </p>
               </div>
               
               <DialogFooter className="pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                  Cancel
+                  Annuler
                 </Button>
                 {isAdmin && (
                   <Button 
@@ -170,11 +256,11 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                     onClick={() => setShowSettings(true)}
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    Settings
+                    Paramètres
                   </Button>
                 )}
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Processing..." : `Purchase for ${modPrice}`}
+                  {isSubmitting ? "Traitement en cours..." : `Acheter pour ${modPrice}`}
                 </Button>
               </DialogFooter>
             </form>
@@ -184,50 +270,64 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5 text-primary" /> 
-                Discord Integration Settings
+                Paramètres d'intégration Discord
               </DialogTitle>
               <DialogDescription>
-                Configure your Discord integration settings for role assignment.
+                Configurez vos paramètres d'intégration Discord pour l'attribution des rôles.
               </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={handleSaveSettings} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <label htmlFor="webhookUrl" className="text-sm font-medium">Zapier Webhook URL</label>
-                <Input
-                  id="webhookUrl"
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                  placeholder="https://hooks.zapier.com/hooks/catch/your-webhook"
-                  className="w-full"
-                />
-                <p className="text-xs text-gray-400">
-                  Enter your Zapier webhook URL that will process Discord role assignments.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="discordToken" className="text-sm font-medium">Discord Bot Token</label>
+                <label htmlFor="discordToken" className="text-sm font-medium">Token du Bot Discord</label>
                 <Input
                   id="discordToken"
                   type="password"
                   value={discordToken}
                   onChange={(e) => setDiscordToken(e.target.value)}
-                  placeholder="Your Discord bot token"
+                  placeholder="Votre token de bot Discord"
                   className="w-full"
                 />
                 <p className="text-xs text-gray-400 text-justify">
-                  Enter your Discord bot token. This will be securely stored in your browser. 
-                  Never share this token publicly. The token will be sent to your Zapier webhook.
+                  Entrez le token de votre bot Discord. Il sera stocké en toute sécurité dans votre navigateur.
+                  Ne partagez jamais ce token publiquement.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="serverId" className="text-sm font-medium">ID du Serveur Discord</label>
+                <Input
+                  id="serverId"
+                  value={serverId}
+                  onChange={(e) => setServerId(e.target.value)}
+                  placeholder="ID de votre serveur Discord"
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-400">
+                  Entrez l'ID de votre serveur Discord (clic droit sur le serveur → Copier l'ID).
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="roleId" className="text-sm font-medium">ID du Rôle Discord</label>
+                <Input
+                  id="roleId"
+                  value={roleId}
+                  onChange={(e) => setRoleId(e.target.value)}
+                  placeholder="ID du rôle à attribuer"
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-400">
+                  Entrez l'ID du rôle à attribuer après l'achat (Paramètres du serveur → Rôles → clic droit sur le rôle → Copier l'ID).
                 </p>
               </div>
               
               <DialogFooter className="pt-4">
                 <Button type="button" variant="outline" onClick={() => setShowSettings(false)}>
-                  Cancel
+                  Annuler
                 </Button>
                 <Button type="submit">
-                  Save Settings
+                  Enregistrer les paramètres
                 </Button>
               </DialogFooter>
             </form>
