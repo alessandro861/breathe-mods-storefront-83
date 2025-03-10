@@ -11,7 +11,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Settings, AlertCircle, Info } from 'lucide-react';
+import { Shield, Settings, AlertCircle, Info, Server, UserCheck } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Label } from '@/components/ui/label';
 
@@ -37,6 +37,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [userId, setUserId] = useState<string | null>(null);
   const [isUserVerified, setIsUserVerified] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [apiResult, setApiResult] = useState<string | null>(null);
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   
@@ -76,15 +77,19 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setIsVerifying(true);
     setIsUserVerified(false);
     setUserId(null);
+    setApiResult(null);
     
     try {
       // Simuler une vérification directe car l'API Discord ne peut pas être appelée directement du navigateur
       // Dans un environnement réel, cela devrait passer par un backend
       
       // Vérifier si c'est une entrée plausible (simple validation)
-      if (discordUsername.length < 2 || discordUsername.includes(' ') && !discordUsername.includes('#')) {
+      if (discordUsername.length < 2 || (discordUsername.includes(' ') && !discordUsername.includes('#'))) {
         throw new Error("Format de nom d'utilisateur Discord invalide");
       }
+      
+      // Simule un délai de recherche d'utilisateur
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // En situation réelle, cela devrait être fait via un backend
       // Ici, on simule une réussite pour démontrer l'interface
@@ -95,7 +100,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       
       toast({
         title: "Utilisateur vérifié",
-        description: `L'utilisateur ${discordUsername} a été vérifié et peut recevoir le rôle.`,
+        description: `L'utilisateur ${discordUsername} a été validé et peut recevoir le rôle.`,
       });
     } catch (error) {
       console.error('Error verifying Discord user:', error);
@@ -124,20 +129,38 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       // Dans un environnement réel, cet appel devrait être fait via un backend
       // Le CORS empêche les appels directs à l'API Discord depuis le navigateur
       
-      // Simuler une attribution réussie
+      // Informations sur la simulation
+      const simulationDetails = 
+        `⚠️ SIMULATION UNIQUEMENT ⚠️\n` +
+        `Serveur: ${serverId}\n` +
+        `Utilisateur: ${userId}\n` +
+        `Rôle: ${roleId}\n\n` +
+        `En environnement de production, cette opération nécessite un backend pour contourner les restrictions CORS.`;
+      
+      setApiResult(simulationDetails);
+      
+      // Log de simulation pour référence
       console.log(`Simulation: Rôle ${roleId} attribué à l'utilisateur ${userId} sur le serveur ${serverId}`);
       
-      // En situation réelle, on ferait un fetch vers un backend qui ferait l'appel à Discord
-      /* 
-      const response = await fetch('/api/discord/assign-role', {
+      // En situation réelle, le code ressemblerait à ceci:
+      /*
+      const response = await fetch('https://votre-backend.com/api/assign-discord-role', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, roleId, serverId, token: discordToken }),
+        body: JSON.stringify({ 
+          username: discordUsername,
+          serverId: serverId,
+          roleId: roleId
+        }),
       });
       
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'attribution du rôle Discord');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erreur lors de l\'attribution du rôle Discord');
       }
+      
+      const data = await response.json();
+      // Traiter la réponse
       */
       
       return true;
@@ -171,20 +194,16 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       const success = await assignRoleToUser(userId);
       
       if (success) {
-        setIsOpen(false);
+        // Ne pas fermer la boîte de dialogue immédiatement pour permettre à l'utilisateur de voir le résultat
+        // setIsOpen(false);
         
         // Afficher un message de succès
         toast({
-          title: "Achat réussi !",
-          description: `Vous avez acheté ${modTitle}. Un rôle Discord a été attribué à ${discordUsername}.`,
+          title: "Achat simulé avec succès",
+          description: `Vous avez acheté ${modTitle}. Dans un environnement de production, un rôle Discord aurait été attribué à ${discordUsername}.`,
         });
-        
-        // Réinitialiser le formulaire
-        setDiscordUsername('');
-        setIsUserVerified(false);
-        setUserId(null);
       } else {
-        throw new Error('Échec de l\'attribution du rôle Discord');
+        throw new Error('Échec de la simulation d\'attribution du rôle Discord');
       }
     } catch (error) {
       console.error('Error processing purchase:', error);
@@ -193,6 +212,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         description: error instanceof Error ? error.message : "Une erreur inattendue s'est produite",
         variant: "destructive",
       });
+      setApiResult(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -212,6 +232,14 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     });
     
     setShowSettings(false);
+  };
+
+  const resetForm = () => {
+    setDiscordUsername('');
+    setIsUserVerified(false);
+    setUserId(null);
+    setApiResult(null);
+    setIsOpen(false);
   };
 
   return (
@@ -240,24 +268,25 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                       setDiscordUsername(e.target.value);
                       setIsUserVerified(false);
                       setUserId(null);
+                      setApiResult(null);
                     }}
                     placeholder="Votre nom d'utilisateur Discord"
                     className="w-full"
                     required
-                    disabled={isUserVerified}
+                    disabled={isUserVerified || isSubmitting}
                   />
                   <Button 
                     type="button" 
                     variant="secondary" 
                     onClick={verifyDiscordUser}
-                    disabled={isVerifying || isUserVerified || !discordUsername}
+                    disabled={isVerifying || isUserVerified || !discordUsername || isSubmitting}
                   >
                     {isVerifying ? "..." : "Vérifier"}
                   </Button>
                 </div>
                 {isUserVerified ? (
                   <p className="text-xs text-green-500 flex items-center">
-                    <Info className="h-3 w-3 mr-1" />
+                    <UserCheck className="h-3 w-3 mr-1" />
                     Utilisateur vérifié avec succès
                   </p>
                 ) : (
@@ -266,6 +295,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                   </p>
                 )}
               </div>
+              
+              {serverId && (
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <Server className="h-3 w-3" /> 
+                  Serveur configuré: {serverId}
+                </div>
+              )}
               
               {!isConfigured && !isAdmin && (
                 <div className="bg-yellow-500/10 p-3 rounded-md flex items-start space-x-2">
@@ -279,19 +315,25 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 </div>
               )}
               
+              {apiResult && (
+                <div className="bg-blue-500/10 p-3 rounded-md overflow-auto max-h-40 text-xs font-mono">
+                  <pre className="whitespace-pre-wrap">{apiResult}</pre>
+                </div>
+              )}
+              
               <div className="bg-primary/10 p-3 rounded-md">
                 <div className="flex justify-between font-medium">
                   <span>Prix:</span>
                   <span>{modPrice}</span>
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  Après l'achat, vous recevrez un rôle Discord qui vous donnera accès au téléchargement du mod.
+                  ⚠️ Version de démonstration: Dans un environnement de production, cette application nécessiterait un backend pour communiquer avec l'API Discord.
                 </p>
               </div>
               
               <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                  Annuler
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Fermer
                 </Button>
                 {isAdmin && (
                   <Button 
@@ -374,7 +416,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 <div>
                   <p className="text-sm font-medium text-blue-500">Note importante</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    En environnement de production, les appels à l'API Discord devraient être effectués depuis un backend pour éviter les restrictions CORS et protéger votre token.
+                    En environnement de production, les appels à l'API Discord devraient être effectués depuis un backend pour éviter les restrictions CORS et protéger votre token. Cette version est uniquement une simulation.
                   </p>
                 </div>
               </div>
@@ -396,3 +438,4 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
 };
 
 export default PurchaseDialog;
+
