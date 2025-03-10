@@ -11,7 +11,7 @@ const Index: React.FC = () => {
   return (
     <Layout>
       <div className="container mx-auto flex flex-col items-center justify-center space-y-20">
-        {/* Hero Section */}
+        {/* Hero Section with just buttons */}
         <section className="w-full">
           <motion.div 
             className="flex flex-col items-center text-center"

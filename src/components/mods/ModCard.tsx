@@ -1,8 +1,19 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ExternalLink, PackageCheck, Edit, Trash, Flag } from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Edit, Trash2, ExternalLink, ShoppingCart } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import PurchaseDialog from './PurchaseDialog';
 
 export interface Mod {
   id: number;
@@ -11,94 +22,119 @@ export interface Mod {
   description: string;
   url: string;
   repackPrice: string;
-  isPaid?: boolean;
+  isPaid: boolean;
 }
 
 interface ModCardProps {
   mod: Mod;
-  onEdit?: (mod: Mod) => void;
-  onDelete?: (id: number) => void;
-  isAdmin?: boolean;
+  isAdmin: boolean;
+  onEdit: (mod: Mod) => void;
+  onDelete: (id: number) => void;
 }
 
-const ModCard: React.FC<ModCardProps> = ({ 
-  mod,
-  onEdit,
-  onDelete,
-  isAdmin
-}) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="glass-panel rounded-xl overflow-hidden shadow-lg relative"
-    >
-      {isAdmin && (
-        <div className="absolute top-3 left-3 flex space-x-2 z-10">
-          <Button 
-            size="icon" 
-            variant="outline" 
-            className="h-8 w-8 bg-black/40 backdrop-blur-sm"
-            onClick={() => onEdit && onEdit(mod)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button 
-            size="icon" 
-            variant="outline" 
-            className="h-8 w-8 bg-red-500/40 backdrop-blur-sm text-red-400 hover:text-red-300 hover:bg-red-500/60"
-            onClick={() => onDelete && onDelete(mod.id)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete }) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
 
-      <div className="relative">
-        <img 
-          src={mod.image} 
-          alt={mod.title} 
-          className="w-full h-48 object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = "https://via.placeholder.com/800x400?text=Mod+Image";
-          }}
+  return (
+    <Card className="h-full flex flex-col bg-card/40 backdrop-blur-sm border-white/10 shadow-xl hover:shadow-primary/5 transition-all duration-300">
+      <div className="relative h-48 overflow-hidden rounded-t-lg">
+        <img
+          src={mod.image || '/placeholder.svg'}
+          alt={mod.title}
+          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
         />
-        <div className={`absolute top-3 right-3 ${mod.isPaid ? 'bg-amber-500/80' : 'bg-primary/80'} text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm`}>
-          {mod.isPaid ? (
-            <span className="flex items-center">
-              <Flag className="h-3.5 w-3.5 mr-1" />
-              Paid Mod
-            </span>
-          ) : 'Free Mod'}
-        </div>
+        {mod.isPaid && (
+          <div className="absolute top-2 right-2 bg-primary/90 text-white px-2 py-1 rounded-md text-xs font-medium">
+            PAID
+          </div>
+        )}
       </div>
       
-      <div className="p-5">
+      <CardContent className="py-4 flex-grow">
         <h3 className="text-xl font-bold mb-2 text-shine">{mod.title}</h3>
-        <p className="text-gray-300 mb-4">{mod.description}</p>
-        
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-2">
-            <PackageCheck className="h-5 w-5 text-primary" />
-            <span className="text-primary font-medium">Repack: {mod.repackPrice}</span>
-          </div>
-        </div>
-        
-        <div className="flex space-x-2">
-          <a 
-            href={mod.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="interactive-button button-shine rounded-lg px-4 py-2 flex-1 flex items-center justify-center space-x-2"
+        <p className="text-sm text-gray-300 mb-2">{mod.description}</p>
+        <p className="text-primary font-semibold mt-2">Repack Price: {mod.repackPrice}</p>
+      </CardContent>
+      
+      <CardFooter className="pt-0 pb-4 flex flex-wrap gap-2">
+        <a 
+          href={mod.url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="w-full"
+        >
+          <Button 
+            variant="outline" 
+            className="w-full text-sm"
           >
-            <ExternalLink className="h-4 w-4" />
-            <span>View on {mod.isPaid ? 'YouTube' : 'Steam'}</span>
-          </a>
-        </div>
-      </div>
-    </motion.div>
+            <ExternalLink className="h-4 w-4 mr-2" />
+            {mod.isPaid ? "View Preview" : "View on Workshop"}
+          </Button>
+        </a>
+        
+        {mod.isPaid && (
+          <Button 
+            className="w-full text-sm bg-primary hover:bg-primary/90"
+            onClick={() => setShowPurchaseDialog(true)}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Purchase Now
+          </Button>
+        )}
+        
+        {isAdmin && (
+          <div className="w-full flex gap-2 mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => onEdit(mod)}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        )}
+      </CardFooter>
+      
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the mod "{mod.title}".
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => onDelete(mod.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <PurchaseDialog 
+        isOpen={showPurchaseDialog} 
+        setIsOpen={setShowPurchaseDialog}
+        modTitle={mod.title}
+        modPrice={mod.repackPrice}
+      />
+    </Card>
   );
 };
 

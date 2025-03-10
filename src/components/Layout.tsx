@@ -16,6 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/free-mods', label: 'Mods' },
+    { path: '/paid-mods', label: 'Paid Mods' },
     { path: '/rules', label: 'Rules' },
     { path: '/request', label: 'Request Mod' },
   ];
