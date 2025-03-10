@@ -18,8 +18,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Send } from 'lucide-react';
+import { Shield, Send, Flag, DollarSign } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -32,6 +33,9 @@ const purchaseFormSchema = z.object({
   }),
   serverIP: z.string().min(7, { 
     message: "Please enter a valid server IP address." 
+  }),
+  priceOption: z.enum(['basic', 'withEMP'], {
+    required_error: "Please select a price option.",
   }),
 });
 
@@ -55,7 +59,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   
   // Get Discord webhook URL from localStorage
   const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
-  // ID de l'utilisateur Discord à mentionner
+  // ID of the Discord user to mention
   const discordUserIdToPing = '1336727014291275829';
 
   // Initialize form with validation
@@ -64,6 +68,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     defaultValues: {
       discordUsername: "",
       serverIP: "",
+      priceOption: "basic",
     },
   });
 
@@ -74,15 +79,18 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       console.log("Processing purchase for mod:", modTitle);
       console.log("User data:", data);
       
+      // Determine the price based on the selected option
+      const selectedPrice = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
+      
       let notificationSent = false;
       
       if (discordWebhookUrl) {
-        // Créer le message avec mention
+        // Create message with mention
         const message = createDiscordPurchaseMessage(
           modTitle,
           data.discordUsername,
           data.serverIP,
-          modPrice,
+          selectedPrice,
           discordUserIdToPing
         );
         
@@ -97,14 +105,14 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       
       if (notificationSent) {
         toast({
-          title: "Achat traité",
-          description: `Vous avez acheté ${modTitle}. Une notification a été envoyée à notre Discord.`,
+          title: "Purchase processed",
+          description: `You have purchased ${modTitle} (${selectedPrice}). A notification has been sent to our Discord.`,
         });
       } else {
         // Still allow purchase even if notification fails
         toast({
-          title: "Achat traité",
-          description: `Vous avez acheté ${modTitle}. (Note: La notification Discord n'a pas pu être envoyée)`,
+          title: "Purchase processed",
+          description: `You have purchased ${modTitle} (${selectedPrice}). (Note: Discord notification could not be sent)`,
         });
       }
       
@@ -112,8 +120,8 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       setIsOpen(false);
     } catch (error) {
       toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors du traitement de votre achat. Veuillez réessayer.",
+        title: "Error",
+        description: "An error occurred while processing your purchase. Please try again.",
         variant: "destructive",
       });
       console.error("Purchase error:", error);
@@ -121,6 +129,9 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  // Show different price options only for Capture Flag mod
+  const showPriceOptions = modTitle === "Capture Flag";
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -165,12 +176,55 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
               )}
             />
             
-            <div className="bg-primary/10 p-3 rounded-md">
-              <div className="flex justify-between font-medium">
-                <span>Price:</span>
-                <span dangerouslySetInnerHTML={{ __html: modPrice }}></span>
+            {showPriceOptions && (
+              <FormField
+                control={form.control}
+                name="priceOption"
+                render={({ field }) => (
+                  <FormItem className="space-y-3">
+                    <FormLabel>Select Price Option</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <div className="flex items-center space-x-2 p-2 border border-border rounded-md hover:bg-accent">
+                          <RadioGroupItem value="basic" id="basic" />
+                          <label htmlFor="basic" className="flex items-center gap-2 cursor-pointer w-full">
+                            <DollarSign className="h-4 w-4 text-green-500" />
+                            <div>
+                              <span className="font-medium">Basic Price</span>
+                              <p className="text-sm text-muted-foreground">Capture Flag mod only - 45€</p>
+                            </div>
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-2 border border-border rounded-md hover:bg-accent">
+                          <RadioGroupItem value="withEMP" id="withEMP" />
+                          <label htmlFor="withEMP" className="flex items-center gap-2 cursor-pointer w-full">
+                            <Flag className="h-4 w-4 text-blue-500" />
+                            <div>
+                              <span className="font-medium">Capture Flag with EMP</span>
+                              <p className="text-sm text-muted-foreground">Includes EMP functionality - 65€</p>
+                            </div>
+                          </label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            {!showPriceOptions && (
+              <div className="bg-primary/10 p-3 rounded-md">
+                <div className="flex justify-between font-medium">
+                  <span>Price:</span>
+                  <span dangerouslySetInnerHTML={{ __html: modPrice }}></span>
+                </div>
               </div>
-            </div>
+            )}
             
             <DialogFooter className="pt-4">
               <Button 
