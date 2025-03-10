@@ -230,38 +230,123 @@ Zapier peut servir d'intermédiaire entre votre application et Discord, ce qui v
 - Sélectionnez "Catch Hook" comme événement déclencheur
 - Configurez le webhook et copiez l'URL générée par Zapier
 
-### 4. Testez le déclencheur
-- Vous pouvez envoyer un test depuis votre application pour vérifier que Zapier reçoit les données
-
-### 5. Configurez l'action Discord
+### 4. Configurez l'action Discord
 - Choisissez "Discord" comme application d'action
 - Sélectionnez "Add Role to User" comme action
 - Connectez votre compte Discord si ce n'est pas déjà fait
 - Configurez les détails:
   * Serveur: Sélectionnez votre serveur Discord
-  * Utilisateur: Utilisez la valeur reçue du webhook (discordUsername)
+  * Utilisateur: Utilisez la valeur reçue du webhook ({{webhook.data.discordUsername}})
   * Rôle: Sélectionnez le rôle à attribuer
 
-### 6. Testez l'action
-- Testez l'action pour vérifier que tout fonctionne correctement
+### 5. Testez votre Zap
+- Cliquez sur "Test & Continue" pour vérifier que tout fonctionne
+- Zapier vous demandera d'envoyer des données à votre webhook pour tester
 
-### 7. Activez le Zap
-- Si les tests sont réussis, activez le Zap
+### 6. Activez votre Zap
+- Une fois testé avec succès, activez votre Zap
 
-### 8. Utilisez dans votre application
-- Utilisez la fonction assignRoleViaZapier() avec l'URL du webhook Zapier
-- Stockez cette URL dans les paramètres de votre application
+### 7. Intégrez dans votre application
+- Utilisez l'URL du webhook dans votre application
+- Configurez-la dans les paramètres d'intégration Discord
 
-## Avantages de cette approche:
-- Pas besoin de gérer un serveur backend
-- Pas besoin de stocker de tokens Discord sensibles
-- Configuration relativement simple
-- Extensible pour d'autres actions (notifications, e-mails, etc.)
+## Exemple de structure de données à envoyer:
+\`\`\`json
+{
+  "discordUsername": "Utilisateur#1234",
+  "timestamp": "2023-06-15T12:34:56Z",
+  "action": "assign_role"
+}
+\`\`\`
 
-## Limitations:
-- Nombre limité d'exécutions sur les plans gratuits de Zapier
-- Latence potentielle dans le traitement des demandes
-- Moins de contrôle sur la logique d'attribution des rôles
-- Nécessite que l'utilisateur Discord soit déjà sur le serveur
+## Points importants:
+- L'utilisateur doit déjà être membre du serveur Discord
+- Zapier a des limites sur le nombre de tâches par mois selon votre forfait
+- Le nom d'utilisateur Discord doit être exact (avec le discriminant si applicable)
 `;
+};
+
+/**
+ * Fonction pour générer un guide étape par étape pour configurer Zapier
+ */
+export const getZapierSetupSteps = (): { title: string; steps: { text: string; image?: string }[] }[] => {
+  return [
+    {
+      title: "Créer un compte Zapier",
+      steps: [
+        {
+          text: "Rendez-vous sur https://zapier.com et créez un compte si vous n'en avez pas déjà un"
+        },
+        {
+          text: "Une fois connecté, accédez au tableau de bord Zapier"
+        }
+      ]
+    },
+    {
+      title: "Créer un nouveau Zap",
+      steps: [
+        {
+          text: "Cliquez sur 'Create Zap' dans le coin supérieur gauche"
+        },
+        {
+          text: "Dans la section 'Trigger', recherchez et sélectionnez 'Webhooks by Zapier'"
+        },
+        {
+          text: "Choisissez 'Catch Hook' comme type de déclencheur et cliquez sur 'Continue'"
+        },
+        {
+          text: "Pour 'Pick off a Child Key', vous pouvez laisser vide car nous utiliserons toutes les données"
+        },
+        {
+          text: "Cliquez sur 'Continue' puis sur 'Test trigger'"
+        },
+        {
+          text: "Zapier vous fournira une URL de webhook unique. Copiez cette URL, vous en aurez besoin dans votre application"
+        }
+      ]
+    },
+    {
+      title: "Configurer l'action Discord",
+      steps: [
+        {
+          text: "Dans la section 'Action', recherchez et sélectionnez 'Discord'"
+        },
+        {
+          text: "Choisissez 'Add Role to User' comme type d'action"
+        },
+        {
+          text: "Connectez votre compte Discord si ce n'est pas déjà fait"
+        },
+        {
+          text: "Sélectionnez votre serveur Discord dans la liste déroulante"
+        },
+        {
+          text: "Pour 'Username', cliquez sur le bouton '+' et sélectionnez 'discordUsername' dans les données du webhook"
+        },
+        {
+          text: "Sélectionnez le rôle à attribuer dans la liste déroulante"
+        },
+        {
+          text: "Cliquez sur 'Continue' puis sur 'Test & Continue'"
+        }
+      ]
+    },
+    {
+      title: "Finaliser et activer",
+      steps: [
+        {
+          text: "Vérifiez que le test a réussi. Si ce n'est pas le cas, revérifiez votre configuration"
+        },
+        {
+          text: "Donnez un nom à votre Zap, par exemple 'Attribution de rôle Discord depuis mon site web'"
+        },
+        {
+          text: "Cliquez sur 'Publish' pour activer votre Zap"
+        },
+        {
+          text: "Retournez dans votre application et collez l'URL du webhook dans les paramètres d'intégration Discord"
+        }
+      ]
+    }
+  ];
 };

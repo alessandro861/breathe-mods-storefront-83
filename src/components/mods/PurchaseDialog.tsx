@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +8,6 @@ import {
   DialogTitle, 
   DialogDescription,
   DialogFooter,
-  DialogTabs,
-  DialogTab
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, Settings, AlertCircle, Info, Server, UserCheck, Code, ExternalLink, Zap } from 'lucide-react';
@@ -50,7 +47,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   
-  // Récupérer les données stockées au chargement du composant
   useEffect(() => {
     const storedDiscordToken = localStorage.getItem('discord-bot-token') || '';
     const storedServerId = localStorage.getItem('discord-server-id') || '';
@@ -65,19 +61,16 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setSelectedMethod(storedMethod);
   }, [isOpen]);
   
-  // Charger le guide d'implémentation Zapier
   useEffect(() => {
     if (showZapierInfo) {
       setZapierGuide(getZapierImplementationGuide());
     }
   }, [showZapierInfo]);
   
-  // Vérification de la configuration
   const isBackendConfigured = discordToken && serverId && roleId;
   const isZapierConfigured = zapierWebhookUrl && zapierWebhookUrl.includes('zapier.com');
   const isConfigured = selectedMethod === 'zapier' ? isZapierConfigured : isBackendConfigured;
   
-  // Fonction pour vérifier l'utilisateur Discord
   const verifyDiscordUser = async () => {
     if (!discordUsername) {
       toast({
@@ -103,16 +96,12 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setApiResult(null);
     
     try {
-      // Vérifier si c'est une entrée plausible (simple validation)
       if (discordUsername.length < 2 || (discordUsername.includes(' ') && !discordUsername.includes('#'))) {
         throw new Error("Format de nom d'utilisateur Discord invalide");
       }
       
-      // Simule un délai de recherche d'utilisateur
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // En situation réelle avec Zapier, on ne peut pas vérifier l'utilisateur à l'avance
-      // On attribue simplement un ID simulé
       const simulatedUserId = `user_${Date.now()}`;
       setUserId(simulatedUserId);
       setIsUserVerified(true);
@@ -133,7 +122,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     }
   };
 
-  // Fonction pour attribuer un rôle via Zapier
   const assignRoleWithZapier = async (): Promise<boolean> => {
     if (!isZapierConfigured) {
       toast({
@@ -147,7 +135,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     try {
       const result = await assignRoleViaZapier(discordUsername, zapierWebhookUrl);
       
-      // Afficher les détails de l'opération
       const operationDetails = 
         `Tentative d'attribution de rôle via Zapier:\n` +
         `Utilisateur: ${discordUsername}\n` +
@@ -182,7 +169,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     }
   };
 
-  // Fonction pour attribuer un rôle via le backend
   const assignRoleWithBackend = async (userId: string): Promise<boolean> => {
     if (!isBackendConfigured) {
       toast({
@@ -194,10 +180,8 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     }
 
     try {
-      // Tenter d'attribuer le rôle via la fonction d'intégration
       const result = await assignDiscordRole(discordUsername, serverId, roleId, discordToken);
       
-      // Afficher les détails de l'opération
       const operationDetails = 
         `Tentative d'attribution de rôle:\n` +
         `Serveur: ${serverId}\n` +
@@ -253,7 +237,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     try {
       let success = false;
       
-      // Utiliser la méthode sélectionnée
       if (selectedMethod === 'zapier') {
         success = await assignRoleWithZapier();
       } else {
@@ -281,7 +264,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     }
   };
 
-  // Pour les administrateurs, permettre de configurer les paramètres
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -537,7 +519,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                     <div>
                       <p className="text-sm font-medium text-blue-500">Avantages de Zapier</p>
                       <p className="text-xs text-gray-500 mt-1">
-                        L'intégration Zapier vous permet d'attribuer des rôles Discord sans avoir à créer et maintenir un backend personnalisé. C'est la solution la plus simple pour connecter votre application à Discord.
+                        L'intégration Zapier vous permet d'attribuer des rôles Discord sans avoir à développer un backend personnalisé. C'est la solution la plus simple pour connecter votre application à Discord.
                       </p>
                       <Button
                         type="button"
