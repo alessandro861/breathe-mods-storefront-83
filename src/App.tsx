@@ -12,6 +12,9 @@ import NotFound from "./pages/NotFound";
 import Rules from "./pages/Rules";
 import Request from "./pages/Request";
 import WorkInProgress from "./pages/WorkInProgress";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import ForgotPassword from "./pages/ForgotPassword";
 import { AdminProvider } from "./hooks/useAdmin";
 
 const queryClient = new QueryClient();
@@ -31,6 +34,9 @@ const App = () => (
               <Route path="/paid-mods" element={<PaidMods />} />
               <Route path="/request" element={<Request />} />
               <Route path="/wip" element={<WorkInProgress />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
