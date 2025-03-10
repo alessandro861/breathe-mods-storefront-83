@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { LockKeyhole, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAdmin } from '@/hooks/useAdmin';
 
 // Define the validation schema
 const loginSchema = z.object({
@@ -28,6 +29,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login: loginAsAdmin } = useAdmin();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -41,19 +43,33 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // This is a mock login - in a real application, you would connect this to your backend
-      console.log("Login values:", values);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to the mods community.",
-      });
-      
-      // Redirect to home page after successful login
-      navigate("/");
+      // Check if the login is for admin
+      if (values.email === 'admin@gmail.com' && values.password === 'Admin1234!') {
+        // Use the admin login function
+        loginAsAdmin('ADMIN1234!');
+        
+        toast({
+          title: "Admin login successful!",
+          description: "You now have administrative privileges.",
+        });
+        
+        // Redirect to home page after successful login
+        navigate("/");
+      } else {
+        // This is a mock login for regular users - in a real application, you would connect this to your backend
+        console.log("Login values:", values);
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to the mods community.",
+        });
+        
+        // Redirect to home page after successful login
+        navigate("/");
+      }
     } catch (error) {
       toast({
         variant: "destructive",

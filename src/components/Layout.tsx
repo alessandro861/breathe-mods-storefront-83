@@ -3,8 +3,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation } from 'react-router-dom';
-import AdminLogin from './AdminLogin';
-import { Construction } from 'lucide-react';
+import { Construction, LogIn } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const { isAdmin, logout } = useAdmin();
   
   // Define navigation items including Work in Progress
   const navItems = [
@@ -74,7 +76,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </Link>
                   ))}
                 </nav>
-                <AdminLogin />
+                
+                {isAdmin ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20"
+                    onClick={logout}
+                  >
+                    Log Out (Admin)
+                  </Button>
+                ) : (
+                  <Link to="/login">
+                    <Button variant="outline" size="sm">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Log In
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
