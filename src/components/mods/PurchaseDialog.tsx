@@ -53,8 +53,8 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // Discord webhook URL - in a production app, this should be stored in environment variables
-  const discordWebhookUrl = "https://discord.com/api/webhooks/your-webhook-id/your-webhook-token";
+  // Get Discord webhook URL from localStorage instead of hardcoding it
+  const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
 
   // Initialize form with validation
   const form = useForm<PurchaseFormValues>({
@@ -67,6 +67,16 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
 
   const sendDiscordNotification = async (formData: PurchaseFormValues) => {
     try {
+      if (!discordWebhookUrl) {
+        console.error("Discord webhook URL is not configured");
+        toast({
+          title: "Discord notification failed",
+          description: "Discord webhook is not configured. Please contact the administrator.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       // Format for Discord message
       const message = {
         embeds: [{
@@ -93,9 +103,10 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         }]
       };
 
-      // Send notification to Discord
-      // Note: This direct approach won't work from browser due to CORS
-      // We'll use the Zapier integration approach instead
+      console.log(`Sending Discord notification to webhook: ${discordWebhookUrl}`);
+      console.log("Message payload:", JSON.stringify(message));
+
+      // Use the updated webhook URL from localStorage
       await assignRoleViaZapier(formData.discordUsername, discordWebhookUrl);
 
       return true;

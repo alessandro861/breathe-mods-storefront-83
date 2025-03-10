@@ -10,6 +10,7 @@ import ModCard, { Mod } from '@/components/mods/ModCard';
 import ModForm from '@/components/mods/ModForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DiscordSettings from '@/components/mods/DiscordSettings';
+import PurchaseDialog from '@/components/mods/PurchaseDialog';
 
 const initialFreeMods = [
   {
@@ -51,6 +52,8 @@ const FreeMods = () => {
   const [currentMod, setCurrentMod] = useState<Mod | null>(null);
   const [activeTab, setActiveTab] = useState("free");
   const [discordSettingsOpen, setDiscordSettingsOpen] = useState(false);
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [selectedMod, setSelectedMod] = useState<Mod | null>(null);
   
   const [freeMods, setFreeMods] = useState<Mod[]>(() => {
     const savedMods = localStorage.getItem('breathe-free-mods');
@@ -151,6 +154,11 @@ const FreeMods = () => {
     setCurrentMod(null);
   };
 
+  const handlePurchase = (mod: Mod) => {
+    setSelectedMod(mod);
+    setPurchaseDialogOpen(true);
+  };
+
   return (
     <Layout>
       <motion.div
@@ -210,6 +218,15 @@ const FreeMods = () => {
           setIsOpen={setDiscordSettingsOpen}
         />
 
+        {selectedMod && (
+          <PurchaseDialog
+            isOpen={purchaseDialogOpen}
+            setIsOpen={setPurchaseDialogOpen}
+            modTitle={selectedMod.title}
+            modPrice={selectedMod.repackPrice}
+          />
+        )}
+
         <Tabs defaultValue="free" value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="free">Free Mods</TabsTrigger>
@@ -225,6 +242,7 @@ const FreeMods = () => {
                   isAdmin={isAdmin}
                   onEdit={handleEditMod}
                   onDelete={handleDeleteMod}
+                  onPurchase={handlePurchase}
                 />
               ))}
               
@@ -245,6 +263,7 @@ const FreeMods = () => {
                   isAdmin={isAdmin}
                   onEdit={handleEditMod}
                   onDelete={handleDeleteMod}
+                  onPurchase={handlePurchase}
                 />
               ))}
               
