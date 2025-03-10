@@ -23,6 +23,7 @@ import { Shield, Send } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { createDiscordPurchaseMessage, sendDiscordWebhook } from '@/utils/discordIntegration';
 
 // Define the form schema with validation
 const purchaseFormSchema = z.object({
@@ -54,6 +55,8 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   
   // Get Discord webhook URL from localStorage
   const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
+  // ID de l'utilisateur Discord à mentionner
+  const discordUserIdToPing = '1336727014291275829';
 
   // Initialize form with validation
   const form = useForm<PurchaseFormValues>({
@@ -64,54 +67,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     },
   });
 
-  const sendDiscordNotification = async (formData: PurchaseFormValues) => {
-    try {
-      if (!discordWebhookUrl) {
-        console.error("Discord webhook URL is not configured");
-        toast({
-          title: "Discord notification failed",
-          description: "Discord webhook is not configured. Please contact the administrator.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      console.log("Sending to webhook URL:", discordWebhookUrl);
-      console.log("Form data:", formData);
-
-      // Format for Discord message - more direct approach for webhook
-      const message = {
-        content: `**New Purchase: ${modTitle}**\nDiscord: ${formData.discordUsername}\nServer IP: ${formData.serverIP}\nPrice: ${modPrice.replace(/<br\/>/g, " - ")}`,
-        username: "Mod Purchase Bot",
-        avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
-      };
-
-      console.log("Message payload:", JSON.stringify(message));
-
-      // Direct webhook approach - this is how Discord webhooks receive data
-      const response = await fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
-
-      console.log("Discord response status:", response.status);
-      if (response.ok) {
-        return true;
-      } else {
-        console.error("Discord webhook failed with status:", response.status);
-        const responseText = await response.text();
-        console.error("Response text:", responseText);
-        return false;
-      }
-    } catch (error) {
-      console.error("Failed to send Discord notification:", error);
-      return false;
-    }
-  };
-  
   const onSubmit = async (data: PurchaseFormValues) => {
     setIsSubmitting(true);
     
@@ -119,22 +74,37 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       console.log("Processing purchase for mod:", modTitle);
       console.log("User data:", data);
       
-      // Send Discord notification
-      const notificationSent = await sendDiscordNotification(data);
+      let notificationSent = false;
+      
+      if (discordWebhookUrl) {
+        // Créer le message avec mention
+        const message = createDiscordPurchaseMessage(
+          modTitle,
+          data.discordUsername,
+          data.serverIP,
+          modPrice,
+          discordUserIdToPing
+        );
+        
+        console.log("Sending Discord notification with user mention...");
+        notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
+      } else {
+        console.error("Discord webhook URL is not configured");
+      }
       
       // Simulate processing time (in a real app, this would be your payment processing)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (notificationSent) {
         toast({
-          title: "Purchase processed",
-          description: `You have purchased ${modTitle}. A notification has been sent to our Discord.`,
+          title: "Achat traité",
+          description: `Vous avez acheté ${modTitle}. Une notification a été envoyée à notre Discord.`,
         });
       } else {
         // Still allow purchase even if notification fails
         toast({
-          title: "Purchase processed",
-          description: `You have purchased ${modTitle}. (Note: Discord notification failed)`,
+          title: "Achat traité",
+          description: `Vous avez acheté ${modTitle}. (Note: La notification Discord n'a pas pu être envoyée)`,
         });
       }
       
@@ -142,8 +112,8 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       setIsOpen(false);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "There was an error processing your purchase. Please try again.",
+        title: "Erreur",
+        description: "Une erreur s'est produite lors du traitement de votre achat. Veuillez réessayer.",
         variant: "destructive",
       });
       console.error("Purchase error:", error);

@@ -96,16 +96,25 @@ export const assignRoleViaZapier = async (
  * @param discordUsername - Nom d'utilisateur Discord
  * @param serverIP - IP du serveur
  * @param price - Prix
+ * @param pingUserId - ID utilisateur Discord à mentionner (optionnel)
  * @returns Object - Message formaté pour Discord
  */
 export const createDiscordPurchaseMessage = (
   modTitle: string,
   discordUsername: string,
   serverIP: string,
-  price: string
+  price: string,
+  pingUserId?: string
 ) => {
+  let content = `**Nouvelle Commande: ${modTitle}**\nDiscord: ${discordUsername}\nServeur IP: ${serverIP}\nPrix: ${price.replace(/<br\/>/g, " - ")}`;
+  
+  // Ajouter une mention si un ID est fourni
+  if (pingUserId) {
+    content = `<@${pingUserId}> ${content}`;
+  }
+  
   return {
-    content: `**Nouvelle Commande: ${modTitle}**\nDiscord: ${discordUsername}\nServeur IP: ${serverIP}\nPrix: ${price.replace(/<br\/>/g, " - ")}`,
+    content: content,
     username: "Breathe Mods Bot",
     avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
   };

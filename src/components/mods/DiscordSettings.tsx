@@ -13,8 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MessageSquare, Save } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { getDiscordWebhookInstructions } from '@/utils/discordIntegration';
+import { sendDiscordWebhook } from '@/utils/discordIntegration';
 
 interface DiscordSettingsProps {
   isOpen: boolean;
@@ -38,8 +37,8 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
       // Validate the URL format (basic check)
       if (webhookUrl && !webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
         toast({
-          title: "Invalid webhook URL",
-          description: "Please enter a valid Discord webhook URL that starts with 'https://discord.com/api/webhooks/'",
+          title: "URL de webhook invalide",
+          description: "Veuillez saisir une URL de webhook Discord valide commençant par 'https://discord.com/api/webhooks/'",
           variant: "destructive",
         });
         setIsSaving(false);
@@ -51,16 +50,16 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
       
       // Show success message
       toast({
-        title: "Settings saved",
-        description: "Discord webhook URL has been saved successfully.",
+        title: "Paramètres enregistrés",
+        description: "L'URL du webhook Discord a été enregistrée avec succès.",
       });
       
       // Close the dialog
       setIsOpen(false);
     } catch (error) {
       toast({
-        title: "Error saving settings",
-        description: "An error occurred while saving settings.",
+        title: "Erreur d'enregistrement",
+        description: "Une erreur s'est produite lors de l'enregistrement des paramètres.",
         variant: "destructive",
       });
       console.error("Error saving Discord settings:", error);
@@ -72,42 +71,38 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
   const handleTestWebhook = async () => {
     if (!webhookUrl) {
       toast({
-        title: "No webhook URL",
-        description: "Please enter a Discord webhook URL first.",
+        title: "Aucune URL de webhook",
+        description: "Veuillez d'abord saisir une URL de webhook Discord.",
         variant: "destructive",
       });
       return;
     }
     
     try {
-      // Send test message
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: "🔔 **Test notification from Breathe DayZ Mods**\nIf you're seeing this, your webhook is configured correctly!",
-          username: "Breathe Test Bot",
-        }),
-      });
+      // Send test message with a mention
+      const testMessage = {
+        content: "<@1336727014291275829> 🔔 **Test de notification depuis Breathe DayZ Mods**\nSi vous voyez ceci, votre webhook est correctement configuré!",
+        username: "Breathe Test Bot",
+      };
       
-      if (response.ok) {
+      const success = await sendDiscordWebhook(webhookUrl, testMessage);
+      
+      if (success) {
         toast({
-          title: "Test successful",
-          description: "A test notification was sent to your Discord channel.",
+          title: "Test réussi",
+          description: "Une notification de test a été envoyée à votre canal Discord avec mention.",
         });
       } else {
         toast({
-          title: "Test failed",
-          description: `Error: ${response.status} ${response.statusText}`,
+          title: "Échec du test",
+          description: "La notification n'a pas pu être envoyée. Vérifiez l'URL du webhook.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Test failed",
-        description: "Could not connect to Discord. Check the URL and your internet connection.",
+        title: "Échec du test",
+        description: "Impossible de se connecter à Discord. Vérifiez l'URL et votre connexion internet.",
         variant: "destructive",
       });
       console.error("Error testing webhook:", error);
@@ -120,16 +115,16 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" /> 
-            Discord Integration Settings
+            Paramètres d'intégration Discord
           </DialogTitle>
           <DialogDescription>
-            Configure your Discord webhook to receive purchase notifications.
+            Configurez votre webhook Discord pour recevoir les notifications d'achat.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="webhook-url">Discord Webhook URL</Label>
+            <Label htmlFor="webhook-url">URL du Webhook Discord</Label>
             <Input
               id="webhook-url"
               placeholder="https://discord.com/api/webhooks/..."
@@ -137,18 +132,18 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
               onChange={(e) => setWebhookUrl(e.target.value)}
             />
             <p className="text-sm text-muted-foreground">
-              This URL will be used to send purchase notifications to your Discord channel.
+              Cette URL sera utilisée pour envoyer des notifications d'achat à votre canal Discord.
             </p>
           </div>
           
           <div className="p-4 border rounded-md bg-muted/50">
-            <h4 className="font-medium mb-2">How to set up a Discord webhook:</h4>
+            <h4 className="font-medium mb-2">Comment configurer un webhook Discord :</h4>
             <ol className="list-decimal list-inside space-y-1 text-sm">
-              <li>Open your Discord server settings</li>
-              <li>Go to "Integrations" → "Webhooks"</li>
-              <li>Click "New Webhook"</li>
-              <li>Name it and select the channel for notifications</li>
-              <li>Copy the webhook URL and paste it above</li>
+              <li>Ouvrez les paramètres de votre serveur Discord</li>
+              <li>Allez dans "Intégrations" → "Webhooks"</li>
+              <li>Cliquez sur "Nouveau Webhook"</li>
+              <li>Nommez-le et sélectionnez le canal pour les notifications</li>
+              <li>Copiez l'URL du webhook et collez-la ci-dessus</li>
             </ol>
           </div>
           
@@ -160,7 +155,7 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
               className="w-full"
               disabled={!webhookUrl}
             >
-              Test Webhook
+              Tester le Webhook
             </Button>
           </div>
         </div>
@@ -171,17 +166,17 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
             variant="outline" 
             onClick={() => setIsOpen(false)}
           >
-            Cancel
+            Annuler
           </Button>
           <Button 
             onClick={handleSave} 
             disabled={isSaving}
             className="gap-2"
           >
-            {isSaving ? "Saving..." : (
+            {isSaving ? "Enregistrement..." : (
               <>
                 <Save className="h-4 w-4" />
-                Save Settings
+                Enregistrer
               </>
             )}
           </Button>
