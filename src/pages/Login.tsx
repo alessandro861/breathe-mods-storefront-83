@@ -1,7 +1,7 @@
 
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { LockKeyhole, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
+import { validateLogin, saveUserSession, getCurrentUser } from '@/services/userService';
 
 // Define the validation schema
 const loginSchema = z.object({
@@ -30,6 +31,14 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login: loginAsAdmin } = useAdmin();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [navigate]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -53,22 +62,29 @@ const Login = () => {
           description: "You now have administrative privileges.",
         });
         
+        // Save user session
+        saveUserSession(values.email);
+        
         // Redirect to home page after successful login
         navigate("/");
       } else {
-        // This is a mock login for regular users - in a real application, you would connect this to your backend
-        console.log("Login values:", values);
+        // Check if user exists and password is correct
+        const isValid = validateLogin(values.email, values.password);
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to the mods community.",
-        });
-        
-        // Redirect to home page after successful login
-        navigate("/");
+        if (isValid) {
+          // Save user session
+          saveUserSession(values.email);
+          
+          toast({
+            title: "Login successful!",
+            description: "Welcome back to the mods community.",
+          });
+          
+          // Redirect to home page after successful login
+          navigate("/");
+        } else {
+          throw new Error("Invalid credentials");
+        }
       }
     } catch (error) {
       toast({

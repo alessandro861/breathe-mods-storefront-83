@@ -1,17 +1,17 @@
 
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { LockKeyhole, Mail, User } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { saveUser, getCurrentUser } from '@/services/userService';
 
 // Define the validation schema
 const signUpSchema = z.object({
@@ -39,6 +39,14 @@ const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [navigate]);
+
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -53,24 +61,33 @@ const SignUp = () => {
     setIsLoading(true);
 
     try {
-      // This is a mock signup - in a real application, you would connect this to your backend
-      console.log("Sign up values:", values);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Account created!",
-        description: "You have successfully signed up.",
+      // Save the new user
+      const success = saveUser({
+        username: values.username,
+        email: values.email,
+        password: values.password
       });
-      
-      // Redirect to login page after successful signup
-      navigate("/login");
+
+      if (success) {
+        toast({
+          title: "Account created!",
+          description: "You have successfully signed up.",
+        });
+        
+        // Redirect to login page after successful signup
+        navigate("/login");
+      } else {
+        throw new Error("Email already exists");
+      }
     } catch (error) {
+      const errorMessage = error instanceof Error && error.message === "Email already exists" 
+        ? "An account with this email already exists."
+        : "Something went wrong. Please try again.";
+      
       toast({
         variant: "destructive",
         title: "Sign up failed",
-        description: "Something went wrong. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);

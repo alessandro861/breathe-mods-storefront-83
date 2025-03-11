@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
-import { Link, useLocation } from 'react-router-dom';
-import { Construction, LogIn, Shield, Ticket } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Construction, LogIn, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/hooks/useAdmin';
+import { getCurrentUser, clearUserSession } from '@/services/userService';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,8 +14,16 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { isAdmin, logout } = useAdmin();
+  const { isAdmin, logout: logoutAdmin } = useAdmin();
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const navigate = useNavigate();
   
+  // Check if user is logged in
+  useEffect(() => {
+    const user = getCurrentUser();
+    setCurrentUser(user);
+  }, [location]); // Re-check when location changes
+
   // Define navigation items including Work in Progress
   const navItems = [
     { path: '/', label: 'Home' },
@@ -32,6 +41,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       icon: <Shield className="h-4 w-4 mr-1" /> 
     });
   }
+
+  const handleLogout = () => {
+    clearUserSession();
+    if (isAdmin) {
+      logoutAdmin();
+    }
+    setCurrentUser(null);
+    navigate('/');
+  };
   
   return (
     <div className="relative min-h-screen flex flex-col">
@@ -86,14 +104,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   ))}
                 </nav>
                 
-                {isAdmin ? (
+                {currentUser ? (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20"
-                    onClick={logout}
+                    className={isAdmin ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20" : ""}
+                    onClick={handleLogout}
                   >
-                    Log Out (Admin)
+                    <LogOut className="w-4 h-4 mr-2" />
+                    {isAdmin ? 'Log Out (Admin)' : 'Log Out'}
                   </Button>
                 ) : (
                   <Link to="/login">
