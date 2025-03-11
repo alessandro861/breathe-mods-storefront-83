@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation } from 'react-router-dom';
-import { Construction, LogIn } from 'lucide-react';
+import { Construction, LogIn, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/hooks/useAdmin';
 
@@ -23,6 +23,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/request', label: 'Request Mod' },
     { path: '/wip', label: 'Work in Progress', icon: <Construction className="h-4 w-4 mr-1" /> },
   ];
+
+  // Add admin page link for admin users
+  if (isAdmin) {
+    navItems.push({ 
+      path: '/admin', 
+      label: 'Admin', 
+      icon: <Shield className="h-4 w-4 mr-1" /> 
+    });
+  }
   
   return (
     <div className="relative min-h-screen flex flex-col">
