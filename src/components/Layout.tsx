@@ -112,9 +112,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
         
-        <footer className="py-4 px-6 text-center text-sm text-gray-400">
+        {/* Footer Links */}
+        <footer className="py-8 px-6">
           <div className="container mx-auto">
-            © {new Date().getFullYear()} Breathe Mods. All rights reserved.
+            <div className="max-w-5xl mx-auto pt-6 border-t border-gray-800">
+              <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400 mb-4">
+                <Link to="/contact" className="hover:text-primary transition-colors">
+                  Contact
+                </Link>
+                <Link to="/terms" className="hover:text-primary transition-colors">
+                  Terms of Service
+                </Link>
+                <Link to="/privacy" className="hover:text-primary transition-colors">
+                  Privacy Policy
+                </Link>
+                <Link to="/faq" className="hover:text-primary transition-colors">
+                  FAQ
+                </Link>
+                <Link to="/about" className="hover:text-primary transition-colors">
+                  About Us
+                </Link>
+              </div>
+              <div className="text-center text-sm text-gray-400">
+                © {new Date().getFullYear()} Breathe Mods. All rights reserved.
+              </div>
+            </div>
           </div>
         </footer>
       </motion.div>

@@ -97,34 +97,6 @@ const Index: React.FC = () => {
             <NavButton to="/request" label="Request a Mod" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
           </motion.div>
         </section>
-
-        {/* Footer Links */}
-        <section className="w-full mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 2.0, duration: 0.5 }}
-            className="max-w-5xl mx-auto pt-10 border-t border-gray-800"
-          >
-            <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400">
-              <Link to="/contact" className="hover:text-primary transition-colors">
-                Contact
-              </Link>
-              <Link to="/terms" className="hover:text-primary transition-colors">
-                Terms of Service
-              </Link>
-              <Link to="/privacy" className="hover:text-primary transition-colors">
-                Privacy Policy
-              </Link>
-              <Link to="/faq" className="hover:text-primary transition-colors">
-                FAQ
-              </Link>
-              <Link to="/about" className="hover:text-primary transition-colors">
-                About Us
-              </Link>
-            </div>
-          </motion.div>
-        </section>
       </div>
     </Layout>
   );
