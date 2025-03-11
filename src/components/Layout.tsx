@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation } from 'react-router-dom';
-import { Construction, LogIn, Shield } from 'lucide-react';
+import { Construction, LogIn, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/hooks/useAdmin';
 
@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/', label: 'Home' },
     { path: '/free-mods', label: 'Mods' },
     { path: '/rules', label: 'Rules' },
-    { path: '/request', label: 'Request Mod' },
+    { path: '/tickets', label: 'Tickets', icon: <Ticket className="h-4 w-4 mr-1" /> },
     { path: '/wip', label: 'Work in Progress', icon: <Construction className="h-4 w-4 mr-1" /> },
   ];
 
