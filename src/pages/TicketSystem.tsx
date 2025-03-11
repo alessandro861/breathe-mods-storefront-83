@@ -10,10 +10,18 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/hooks/use-toast';
-import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX, Settings } from 'lucide-react';
+import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX, Settings, Send } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sendDiscordWebhook } from '@/utils/discordIntegration';
 import DiscordSettings from '@/components/mods/DiscordSettings';
+import TicketChat from '@/components/tickets/TicketChat';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from "@/components/ui/dialog";
 
 // Schema for validation
 const ticketSchema = z.object({
@@ -24,17 +32,71 @@ const ticketSchema = z.object({
 
 type TicketFormValues = z.infer<typeof ticketSchema>;
 
-// Mock data for tickets
-const mockTickets = [
-  { id: 1, title: "Minecraft fly mod", status: "open", createdAt: "2023-05-15", lastUpdated: "2023-05-16" },
-  { id: 2, title: "Skyrim combat overhaul", status: "pending", createdAt: "2023-05-10", lastUpdated: "2023-05-12" },
-  { id: 3, title: "Fallout 4 graphics enhancer", status: "closed", createdAt: "2023-04-28", lastUpdated: "2023-05-05" },
+// Ticket type definition
+interface Ticket {
+  id: number;
+  title: string;
+  status: 'open' | 'pending' | 'closed';
+  createdAt: string;
+  lastUpdated: string;
+  messages?: TicketMessage[];
+}
+
+// Message type for ticket chats
+interface TicketMessage {
+  id: number;
+  content: string;
+  sender: 'user' | 'admin';
+  timestamp: string;
+}
+
+// Mock data for tickets with messages
+const mockTickets: Ticket[] = [
+  { 
+    id: 1, 
+    title: "Minecraft fly mod", 
+    status: "open", 
+    createdAt: "2023-05-15", 
+    lastUpdated: "2023-05-16",
+    messages: [
+      { id: 1, content: "Hi, I need a fly mod for Minecraft 1.19.2", sender: "user", timestamp: "2023-05-15 14:30" },
+      { id: 2, content: "Sure, I'll look into this for you. Do you need any specific features?", sender: "admin", timestamp: "2023-05-16 10:15" }
+    ]
+  },
+  { 
+    id: 2, 
+    title: "Skyrim combat overhaul", 
+    status: "pending", 
+    createdAt: "2023-05-10", 
+    lastUpdated: "2023-05-12",
+    messages: [
+      { id: 1, content: "I'm looking for a combat overhaul for Skyrim", sender: "user", timestamp: "2023-05-10 09:45" },
+      { id: 2, content: "Could you specify what aspects of combat you want to change?", sender: "admin", timestamp: "2023-05-12 16:20" }
+    ]
+  },
+  { 
+    id: 3, 
+    title: "Fallout 4 graphics enhancer", 
+    status: "closed", 
+    createdAt: "2023-04-28", 
+    lastUpdated: "2023-05-05",
+    messages: [
+      { id: 1, content: "Need a graphics enhancer for Fallout 4 that works with low-end PCs", sender: "user", timestamp: "2023-04-28 11:05" },
+      { id: 2, content: "I've found a good option that should work for you.", sender: "admin", timestamp: "2023-05-01 13:45" },
+      { id: 3, content: "Great, thank you! I'll give it a try.", sender: "user", timestamp: "2023-05-02 09:30" },
+      { id: 4, content: "This request is now closed. Please open a new ticket if you need further assistance.", sender: "admin", timestamp: "2023-05-05 15:10" }
+    ]
+  },
 ];
 
 const TicketSystem = () => {
   const [activeTab, setActiveTab] = useState("create");
   const [isDiscordSettingsOpen, setIsDiscordSettingsOpen] = useState(false);
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
+  const [userTickets, setUserTickets] = useState<Ticket[]>(mockTickets);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
   
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema),
@@ -56,11 +118,34 @@ const TicketSystem = () => {
   const onSubmit = async (data: TicketFormValues) => {
     console.log("Ticket submitted:", data);
     
+    // Create a new ticket
+    const newTicket: Ticket = {
+      id: userTickets.length > 0 ? Math.max(...userTickets.map(t => t.id)) + 1 : 1,
+      title: data.title,
+      status: "open",
+      createdAt: new Date().toISOString().split('T')[0],
+      lastUpdated: new Date().toISOString().split('T')[0],
+      messages: [
+        { 
+          id: 1, 
+          content: data.description, 
+          sender: "user", 
+          timestamp: new Date().toLocaleString() 
+        }
+      ]
+    };
+    
+    // Add the new ticket to our state
+    setUserTickets([newTicket, ...userTickets]);
+    
     // In a real application, you would send this data to a backend
     toast({
       title: "Ticket Created",
       description: "Your ticket has been submitted successfully. We'll get back to you soon.",
     });
+    
+    // Switch to the my-tickets tab
+    setActiveTab("my-tickets");
     
     // Send Discord notification if webhook URL is configured
     if (discordWebhookUrl) {
@@ -124,6 +209,43 @@ const TicketSystem = () => {
     }
   };
 
+  const openTicketChat = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setIsChatOpen(true);
+  };
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedTicket) return;
+    
+    const newMsg: TicketMessage = {
+      id: (selectedTicket.messages?.length || 0) + 1,
+      content: newMessage,
+      sender: "user",
+      timestamp: new Date().toLocaleString()
+    };
+    
+    // Update the ticket with the new message
+    const updatedTickets = userTickets.map(ticket => {
+      if (ticket.id === selectedTicket.id) {
+        return {
+          ...ticket,
+          messages: [...(ticket.messages || []), newMsg],
+          lastUpdated: new Date().toISOString().split('T')[0]
+        };
+      }
+      return ticket;
+    });
+    
+    // Update the selected ticket with the new message
+    const updatedSelectedTicket = updatedTickets.find(t => t.id === selectedTicket.id);
+    
+    setUserTickets(updatedTickets);
+    setSelectedTicket(updatedSelectedTicket || null);
+    setNewMessage("");
+    
+    // In a real app, you would send this message to a backend
+  };
+
   return (
     <Layout>
       <motion.div
@@ -152,7 +274,7 @@ const TicketSystem = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="create" className="w-full" onValueChange={setActiveTab}>
+        <Tabs defaultValue="create" className="w-full" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="create" className="flex items-center gap-2">
               <TicketPlus className="h-4 w-4" /> Create Ticket
@@ -250,7 +372,7 @@ const TicketSystem = () => {
           
           <TabsContent value="my-tickets">
             <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-8">
-              {mockTickets.length > 0 ? (
+              {userTickets.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead>
@@ -264,7 +386,7 @@ const TicketSystem = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
-                      {mockTickets.map((ticket) => (
+                      {userTickets.map((ticket) => (
                         <tr key={ticket.id} className="hover:bg-gray-800/50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">#{ticket.id}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">{ticket.title}</td>
@@ -272,7 +394,8 @@ const TicketSystem = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{ticket.createdAt}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{ticket.lastUpdated}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-400">
+                            <Button size="sm" variant="ghost" className="text-blue-500 hover:text-blue-400"
+                              onClick={() => openTicketChat(ticket)}>
                               <MessageSquare className="h-4 w-4" />
                             </Button>
                           </td>
@@ -301,6 +424,59 @@ const TicketSystem = () => {
         isOpen={isDiscordSettingsOpen} 
         setIsOpen={setIsDiscordSettingsOpen} 
       />
+
+      {/* Ticket Chat Dialog */}
+      <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-shine">
+              Ticket #{selectedTicket?.id}: {selectedTicket?.title}
+            </DialogTitle>
+            <DialogDescription>
+              {getStatusBadge(selectedTicket?.status || 'open')} 
+              <span className="ml-2 text-gray-300 text-sm">
+                Created on {selectedTicket?.createdAt}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 my-4">
+            <div className="max-h-[40vh] overflow-y-auto p-2 space-y-3">
+              {selectedTicket?.messages?.map((message) => (
+                <div 
+                  key={message.id} 
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.sender === 'user'
+                        ? 'bg-blue-900 text-white'
+                        : 'bg-gray-800 text-gray-100'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <p className="text-right text-xs mt-1 opacity-60">{message.timestamp}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {selectedTicket?.status !== 'closed' && (
+              <div className="flex items-center gap-2 mt-4">
+                <Input 
+                  placeholder="Type your message here..." 
+                  value={newMessage} 
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                />
+                <Button onClick={handleSendMessage} className="px-3">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
