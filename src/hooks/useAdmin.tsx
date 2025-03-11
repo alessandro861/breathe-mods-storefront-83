@@ -19,13 +19,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const adminStatus = localStorage.getItem('breathe-admin');
     if (adminStatus === 'true') {
       setIsAdmin(true);
+      console.log("Admin status loaded from storage: true");
+    } else {
+      console.log("Admin status loaded from storage: false or not found");
     }
   }, []);
 
   const login = (code: string): boolean => {
+    console.log("Admin login attempt with code", code);
     if (code === 'ADMIN1234!') {
       setIsAdmin(true);
       localStorage.setItem('breathe-admin', 'true');
+      console.log("Admin login successful, storage updated");
       toast({
         title: "Admin access granted",
         description: "You now have administrative privileges",
@@ -33,6 +38,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
       return true;
     } else {
+      console.log("Admin login failed: invalid code");
       toast({
         title: "Invalid admin code",
         description: "The code you entered is incorrect",
@@ -45,6 +51,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const logout = () => {
     setIsAdmin(false);
     localStorage.removeItem('breathe-admin');
+    console.log("Admin logged out, storage cleared");
     toast({
       title: "Logged out",
       description: "Admin session ended",

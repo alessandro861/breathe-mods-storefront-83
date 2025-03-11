@@ -30,7 +30,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login: loginAsAdmin } = useAdmin();
+  const { login: loginAsAdmin, isAdmin } = useAdmin();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -54,20 +54,32 @@ const Login = () => {
     try {
       // Check if the login is for admin
       if (values.email === 'admin@gmail.com' && values.password === 'Admin1234!') {
+        console.log("Attempting admin login...");
+        
         // Use the admin login function
-        loginAsAdmin('ADMIN1234!');
+        const success = loginAsAdmin('ADMIN1234!');
         
-        toast({
-          title: "Admin login successful!",
-          description: "You now have administrative privileges.",
-        });
-        
-        // Save user session
-        saveUserSession(values.email);
-        
-        // Redirect to home page after successful login
-        navigate("/");
+        if (success) {
+          console.log("Admin login successful");
+          
+          // Save user session
+          saveUserSession(values.email);
+          
+          toast({
+            title: "Admin login successful!",
+            description: "You now have administrative privileges.",
+          });
+          
+          // Redirect to home page after successful login
+          navigate("/admin");
+          return;
+        } else {
+          console.error("Admin login failed");
+          throw new Error("Admin login failed");
+        }
       } else {
+        // Regular user login flow
+        console.log("Attempting regular user login...");
         // Check if user exists and password is correct
         const isValid = validateLogin(values.email, values.password);
         
@@ -87,6 +99,7 @@ const Login = () => {
         }
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
