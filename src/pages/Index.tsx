@@ -94,7 +94,7 @@ const Index: React.FC = () => {
           >
             <NavButton to="/rules" label="Rules" icon={<Shield className="h-5 w-5 text-primary" />} delay={0.1} />
             <NavButton to="/free-mods" label="Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
-            <NavButton to="/request" label="Request a Mod" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
+            <NavButton to="/tickets" label="Ticket System" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
           </motion.div>
         </section>
       </div>

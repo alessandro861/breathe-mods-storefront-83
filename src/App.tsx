@@ -10,7 +10,7 @@ import FreeMods from "./pages/FreeMods";
 import PaidMods from "./pages/PaidMods";
 import NotFound from "./pages/NotFound";
 import Rules from "./pages/Rules";
-import Request from "./pages/Request";
+import TicketSystem from "./pages/TicketSystem";
 import WorkInProgress from "./pages/WorkInProgress";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -33,7 +33,7 @@ const App = () => (
               <Route path="/rules" element={<Rules />} />
               <Route path="/free-mods" element={<FreeMods />} />
               <Route path="/paid-mods" element={<PaidMods />} />
-              <Route path="/request" element={<Request />} />
+              <Route path="/tickets" element={<TicketSystem />} />
               <Route path="/wip" element={<WorkInProgress />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
