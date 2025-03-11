@@ -9,7 +9,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sendDiscordWebhook } from '@/utils/discordIntegration';
@@ -22,6 +22,8 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
+import { getCurrentUser } from '@/services/userService';
+import { useAdmin } from '@/hooks/useAdmin';
 
 // Schema for validation
 const ticketSchema = z.object({
@@ -39,7 +41,8 @@ interface Ticket {
   status: 'open' | 'pending' | 'closed';
   createdAt: string;
   lastUpdated: string;
-  messages?: TicketMessage[];
+  userEmail: string;
+  messages: TicketMessage[];
 }
 
 // Message type for ticket chats
@@ -54,16 +57,20 @@ const TicketSystem = () => {
   const [activeTab, setActiveTab] = useState("create");
   const [isDiscordSettingsOpen, setIsDiscordSettingsOpen] = useState(false);
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [userTickets, setUserTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { toast } = useToast();
+  const { isAdmin } = useAdmin();
+  const currentUser = getCurrentUser();
   
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema),
     defaultValues: {
       title: "",
       description: "",
-      contactInfo: ""
+      contactInfo: currentUser || ""
     }
   });
 
@@ -73,18 +80,39 @@ const TicketSystem = () => {
     if (storedWebhookUrl) {
       setDiscordWebhookUrl(storedWebhookUrl);
     }
-  }, []);
+    
+    // Load tickets from localStorage
+    const ticketsString = localStorage.getItem('breathe-tickets');
+    if (ticketsString) {
+      const tickets = JSON.parse(ticketsString) as Ticket[];
+      setAllTickets(tickets);
+      
+      // Filter tickets for the current user
+      if (currentUser) {
+        const userFilteredTickets = tickets.filter(ticket => ticket.userEmail === currentUser);
+        setUserTickets(userFilteredTickets);
+      }
+    }
+  }, [currentUser]);
 
   const onSubmit = async (data: TicketFormValues) => {
-    console.log("Ticket submitted:", data);
+    if (!currentUser) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to create a ticket.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Create a new ticket
     const newTicket: Ticket = {
-      id: userTickets.length > 0 ? Math.max(...userTickets.map(t => t.id)) + 1 : 1,
+      id: allTickets.length > 0 ? Math.max(...allTickets.map(t => t.id)) + 1 : 1,
       title: data.title,
       status: "open",
       createdAt: new Date().toISOString().split('T')[0],
       lastUpdated: new Date().toISOString().split('T')[0],
+      userEmail: currentUser,
       messages: [
         { 
           id: 1, 
@@ -96,9 +124,15 @@ const TicketSystem = () => {
     };
     
     // Add the new ticket to our state
-    setUserTickets([newTicket, ...userTickets]);
+    const updatedAllTickets = [...allTickets, newTicket];
+    const updatedUserTickets = [...userTickets, newTicket];
     
-    // In a real application, you would send this data to a backend
+    setAllTickets(updatedAllTickets);
+    setUserTickets(updatedUserTickets);
+    
+    // Store in localStorage
+    localStorage.setItem('breathe-tickets', JSON.stringify(updatedAllTickets));
+    
     toast({
       title: "Ticket Created",
       description: "Your ticket has been submitted successfully. We'll get back to you soon.",
@@ -153,7 +187,11 @@ const TicketSystem = () => {
       }
     }
     
-    form.reset();
+    form.reset({
+      title: "",
+      description: "",
+      contactInfo: currentUser || ""
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -175,7 +213,7 @@ const TicketSystem = () => {
   };
 
   const handleSendMessage = (message: string) => {
-    if (!message.trim() || !selectedTicket) return;
+    if (!message.trim() || !selectedTicket || !currentUser) return;
     
     const newMsg: TicketMessage = {
       id: (selectedTicket.messages?.length || 0) + 1,
@@ -185,11 +223,23 @@ const TicketSystem = () => {
     };
     
     // Update the ticket with the new message
-    const updatedTickets = userTickets.map(ticket => {
+    const updatedAllTickets = allTickets.map(ticket => {
       if (ticket.id === selectedTicket.id) {
         return {
           ...ticket,
-          messages: [...(ticket.messages || []), newMsg],
+          messages: [...ticket.messages, newMsg],
+          lastUpdated: new Date().toISOString().split('T')[0]
+        };
+      }
+      return ticket;
+    });
+    
+    // Also update user tickets
+    const updatedUserTickets = userTickets.map(ticket => {
+      if (ticket.id === selectedTicket.id) {
+        return {
+          ...ticket,
+          messages: [...ticket.messages, newMsg],
           lastUpdated: new Date().toISOString().split('T')[0]
         };
       }
@@ -197,12 +247,14 @@ const TicketSystem = () => {
     });
     
     // Update the selected ticket with the new message
-    const updatedSelectedTicket = updatedTickets.find(t => t.id === selectedTicket.id);
+    const updatedSelectedTicket = updatedAllTickets.find(t => t.id === selectedTicket.id);
     
-    setUserTickets(updatedTickets);
+    setAllTickets(updatedAllTickets);
+    setUserTickets(updatedUserTickets);
     setSelectedTicket(updatedSelectedTicket || null);
     
-    // In a real app, you would send this message to a backend
+    // Store updated tickets in localStorage
+    localStorage.setItem('breathe-tickets', JSON.stringify(updatedAllTickets));
   };
 
   return (
@@ -245,69 +297,86 @@ const TicketSystem = () => {
           
           <TabsContent value="create" className="space-y-4">
             <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-8">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ticket Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., Request for Skyrim combat mod" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Provide a brief title for your ticket
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Please describe your request in detail, including the game name, what functionality you need, etc." 
-                            className="min-h-[150px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Be as detailed as possible to help us understand your request
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="contactInfo"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contact Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="your-email@example.com" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          We'll use this to update you on your ticket
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button type="submit" size="lg" className="w-full mt-6">
-                    <TicketPlus className="mr-2 h-5 w-5" />
-                    Submit Ticket
+              {!currentUser ? (
+                <div className="text-center py-8">
+                  <TicketX className="h-12 w-12 mx-auto text-gray-500 mb-4" />
+                  <h3 className="text-xl font-medium text-gray-300 mb-2">Authentication Required</h3>
+                  <p className="text-gray-400 mb-6">Please log in to create a ticket.</p>
+                  <Button onClick={() => navigate('/login')} variant="default">
+                    Log In to Continue
                   </Button>
-                </form>
-              </Form>
+                </div>
+              ) : (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ticket Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Request for Skyrim combat mod" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Provide a brief title for your ticket
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Please describe your request in detail, including the game name, what functionality you need, etc." 
+                              className="min-h-[150px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Be as detailed as possible to help us understand your request
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="contactInfo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="email" 
+                              placeholder="your-email@example.com" 
+                              {...field} 
+                              value={currentUser || field.value}
+                              disabled={!!currentUser}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            We'll use this to update you on your ticket
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button type="submit" size="lg" className="w-full mt-6">
+                      <TicketPlus className="mr-2 h-5 w-5" />
+                      Submit Ticket
+                    </Button>
+                  </form>
+                </Form>
+              )}
               
               <div className="mt-8 pt-6 border-t border-gray-700/50">
                 <h3 className="text-lg font-medium mb-4">What happens next?</h3>
@@ -331,7 +400,16 @@ const TicketSystem = () => {
           
           <TabsContent value="my-tickets">
             <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-8">
-              {userTickets.length > 0 ? (
+              {!currentUser ? (
+                <div className="text-center py-8">
+                  <TicketX className="h-12 w-12 mx-auto text-gray-500 mb-4" />
+                  <h3 className="text-xl font-medium text-gray-300 mb-2">Authentication Required</h3>
+                  <p className="text-gray-400 mb-6">Please log in to view your tickets.</p>
+                  <Button onClick={() => navigate('/login')} variant="default">
+                    Log In to Continue
+                  </Button>
+                </div>
+              ) : userTickets.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-700">
                     <thead>

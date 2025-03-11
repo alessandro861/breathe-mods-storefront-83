@@ -1,51 +1,57 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import Index from "./pages/Index";
-import FreeMods from "./pages/FreeMods";
-import PaidMods from "./pages/PaidMods";
-import NotFound from "./pages/NotFound";
-import Rules from "./pages/Rules";
-import TicketSystem from "./pages/TicketSystem";
-import WorkInProgress from "./pages/WorkInProgress";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import ForgotPassword from "./pages/ForgotPassword";
-import AdminPage from "./pages/Admin";
-import { AdminProvider } from "./hooks/useAdmin";
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import NotFound from './pages/NotFound';
+import FreeMods from './pages/FreeMods';
+import PaidMods from './pages/PaidMods';
+import ComingSoon from './pages/ComingSoon';
+import ForgotPassword from './pages/ForgotPassword';
+import Admin from './pages/Admin';
+import Rules from './pages/Rules';
+import WorkInProgress from './pages/WorkInProgress';
+import Request from './pages/Request';
+import TicketSystem from './pages/TicketSystem';
+import ManageAccounts from './pages/ManageAccounts';
+import { AdminProvider } from './hooks/useAdmin';
+import { addSampleData } from './services/userService';
 
-const queryClient = new QueryClient();
+function App() {
+  useEffect(() => {
+    // Initialize sample data on first load if needed
+    addSampleData();
+  }, []);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AdminProvider>
+  return (
+    <AdminProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/free-mods" element={<FreeMods />} />
+          <Route path="/paid-mods" element={<PaidMods />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/manage-accounts" element={<ManageAccounts />} />
+          <Route path="/rules" element={<Rules />} />
+          <Route path="/wip" element={<WorkInProgress />} />
+          <Route path="/request" element={<Request />} />
+          <Route path="/tickets" element={<TicketSystem />} />
+          <Route path="/privacy" element={<ComingSoon />} />
+          <Route path="/terms" element={<ComingSoon />} />
+          <Route path="/contact" element={<ComingSoon />} />
+          <Route path="/faq" element={<ComingSoon />} />
+          <Route path="/about" element={<ComingSoon />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/rules" element={<Rules />} />
-              <Route path="/free-mods" element={<FreeMods />} />
-              <Route path="/paid-mods" element={<PaidMods />} />
-              <Route path="/tickets" element={<TicketSystem />} />
-              <Route path="/wip" element={<WorkInProgress />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
-        </BrowserRouter>
-      </AdminProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </Router>
+    </AdminProvider>
+  );
+}
 
 export default App;
