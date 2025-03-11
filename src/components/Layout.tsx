@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Construction, LogIn, LogOut, Shield, Ticket, Users } from 'lucide-react';
+import { Construction, LogIn, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/hooks/useAdmin';
 import { getCurrentUser, clearUserSession } from '@/services/userService';
@@ -39,11 +38,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       path: '/admin', 
       label: 'Admin', 
       icon: <Shield className="h-4 w-4 mr-1" /> 
-    });
-    navItems.push({ 
-      path: '/manage-accounts', 
-      label: 'Manage Accounts', 
-      icon: <Users className="h-4 w-4 mr-1" /> 
     });
   }
 

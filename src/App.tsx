@@ -15,7 +15,6 @@ import Rules from './pages/Rules';
 import WorkInProgress from './pages/WorkInProgress';
 import Request from './pages/Request';
 import TicketSystem from './pages/TicketSystem';
-import ManageAccounts from './pages/ManageAccounts';
 import { AdminProvider } from './hooks/useAdmin';
 import { addSampleData } from './services/userService';
 
@@ -36,7 +35,6 @@ function App() {
           <Route path="/free-mods" element={<FreeMods />} />
           <Route path="/paid-mods" element={<PaidMods />} />
           <Route path="/admin" element={<Admin />} />
-          <Route path="/manage-accounts" element={<ManageAccounts />} />
           <Route path="/rules" element={<Rules />} />
           <Route path="/wip" element={<WorkInProgress />} />
           <Route path="/request" element={<Request />} />

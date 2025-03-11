@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -57,14 +58,6 @@ const AdminPage = () => {
             </div>
             
             <div className="flex space-x-3">
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/manage-accounts')}
-                className="flex items-center gap-2"
-              >
-                Manage All Accounts
-              </Button>
-              
               <Button 
                 variant="secondary" 
                 onClick={() => {
