@@ -17,13 +17,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Check if user is logged in
   useEffect(() => {
     const user = getCurrentUser();
     setCurrentUser(user);
-  }, [location]); // Re-check when location changes
+  }, [location]);
 
-  // Define navigation items including Work in Progress
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/free-mods', label: 'Mods' },
@@ -32,7 +30,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { path: '/wip', label: 'Work in Progress', icon: <Construction className="h-4 w-4 mr-1" /> },
   ];
 
-  // Add admin page link for admin users
   if (isAdmin) {
     navItems.push({ 
       path: '/admin', 
@@ -63,7 +60,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Header with Logo and Navigation */}
         <header className="py-4 px-6">
           <div className="container mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-center">
@@ -84,7 +80,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               </a>
               
-              {/* Navigation */}
               <div className="flex items-center">
                 <nav className="flex flex-wrap justify-center gap-2 mr-4">
                   {navItems.map((item) => (
@@ -130,7 +125,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
         
-        {/* Footer Links */}
         <footer className="py-8 px-6">
           <div className="container mx-auto">
             <div className="max-w-5xl mx-auto pt-6 border-t border-gray-800">
