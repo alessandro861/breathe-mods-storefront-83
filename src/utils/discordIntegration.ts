@@ -138,6 +138,25 @@ export const createDiscordPurchaseMessage = (
   };
 };
 
+/**
+ * Creates a formatted message for ticket notifications
+ * @param ticketId - Ticket ID
+ * @param ticketTitle - Ticket title
+ * @param userEmail - User's email
+ * @returns Object - Formatted message for Discord
+ */
+export const createDiscordTicketMessage = (
+  ticketId: number,
+  ticketTitle: string,
+  userEmail: string
+) => {
+  return {
+    content: `🎫 **New Support Ticket #${ticketId}**\nTitle: **${ticketTitle}**\nUser: **${userEmail}**`,
+    username: "Breathe Support Bot",
+    avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
+  };
+};
+
 // Instructions for setting up a Discord webhook
 export const getDiscordWebhookInstructions = (): string => {
   return `

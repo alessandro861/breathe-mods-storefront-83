@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserList } from '@/components/admin/UserList';
 import { PurchaseHistory } from '@/components/admin/PurchaseHistory';
 import { AdminTickets } from '@/components/admin/AdminTickets';
+import WebhookSettings from '@/components/admin/WebhookSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Ticket } from 'lucide-react';
+import { ShieldAlert, Ticket, BellRing } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,7 @@ const AdminPage = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-              <p className="text-gray-400 mb-6">Manage users and view purchases</p>
+              <p className="text-gray-400 mb-6">Manage accounts and view purchases</p>
             </div>
             
             <div className="flex space-x-3">
@@ -88,6 +89,10 @@ const AdminPage = () => {
                 <Ticket className="h-4 w-4" />
                 Support Tickets
               </TabsTrigger>
+              <TabsTrigger value="webhooks" className="flex items-center gap-1">
+                <BellRing className="h-4 w-4" />
+                Webhook Notifications
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="users" className="space-y-4">
@@ -100,6 +105,10 @@ const AdminPage = () => {
             
             <TabsContent value="tickets" className="space-y-4">
               <AdminTickets />
+            </TabsContent>
+            
+            <TabsContent value="webhooks" className="space-y-4">
+              <WebhookSettings />
             </TabsContent>
           </Tabs>
         </div>
