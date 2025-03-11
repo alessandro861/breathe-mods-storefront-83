@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -58,8 +57,13 @@ export const AdminTickets = () => {
       try {
         const ticketsString = localStorage.getItem('breathe-tickets');
         if (ticketsString) {
-          const tickets = JSON.parse(ticketsString) as AdminTicket[];
-          setAllTickets(tickets);
+          const tickets = JSON.parse(ticketsString);
+          // Ensure all tickets have a valid status
+          const validatedTickets = tickets.map((ticket: any) => ({
+            ...ticket,
+            status: ['open', 'pending', 'closed'].includes(ticket.status) ? ticket.status : 'open' as const
+          }));
+          setAllTickets(validatedTickets as AdminTicket[]);
         }
       } catch (error) {
         console.error('Error loading tickets:', error);
@@ -147,7 +151,7 @@ export const AdminTickets = () => {
           ...ticket,
           messages: [...ticket.messages, newMsg],
           lastUpdated: new Date().toISOString().split('T')[0],
-          status: 'pending' // Change status to pending when admin replies
+          status: 'pending' as const
         };
       }
       return ticket;
@@ -158,7 +162,9 @@ export const AdminTickets = () => {
     
     // Update the selected ticket with the new message
     const updatedSelectedTicket = updatedTickets.find(t => t.id === selectedTicket.id);
-    setSelectedTicket(updatedSelectedTicket || null);
+    if (updatedSelectedTicket) {
+      setSelectedTicket(updatedSelectedTicket);
+    }
     
     toast({
       title: "Response Sent",

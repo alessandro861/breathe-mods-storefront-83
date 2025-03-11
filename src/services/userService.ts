@@ -1,5 +1,5 @@
 
-interface User {
+export interface User {
   username?: string;
   email: string;
   password: string;
@@ -7,7 +7,7 @@ interface User {
   purchases?: Purchase[];
 }
 
-interface Purchase {
+export interface Purchase {
   id: string;
   productName: string;
   date: string;

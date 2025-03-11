@@ -5,8 +5,8 @@ import Layout from '@/components/Layout';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Search, User, Server, ShoppingCart } from 'lucide-react';
-import { getUsers, User as UserType } from '@/services/userService';
+import { ShieldAlert, Search, User as UserIcon, Server, ShoppingCart } from 'lucide-react';
+import { getUsers, User } from '@/services/userService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,

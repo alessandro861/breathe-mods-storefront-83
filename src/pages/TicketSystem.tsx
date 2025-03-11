@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -24,8 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { getCurrentUser } from '@/services/userService';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useNavigate } from 'react-router-dom';
 
-// Schema for validation
 const ticketSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters" }),
   description: z.string().min(20, { message: "Description must be at least 20 characters" }),
@@ -34,7 +33,6 @@ const ticketSchema = z.object({
 
 type TicketFormValues = z.infer<typeof ticketSchema>;
 
-// Ticket type definition
 interface Ticket {
   id: number;
   title: string;
@@ -45,7 +43,6 @@ interface Ticket {
   messages: TicketMessage[];
 }
 
-// Message type for ticket chats
 interface TicketMessage {
   id: number;
   content: string;
@@ -64,6 +61,7 @@ const TicketSystem = () => {
   const { toast } = useToast();
   const { isAdmin } = useAdmin();
   const currentUser = getCurrentUser();
+  const navigate = useNavigate();
   
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema),
@@ -75,19 +73,16 @@ const TicketSystem = () => {
   });
 
   useEffect(() => {
-    // Load Discord webhook URL from localStorage
     const storedWebhookUrl = localStorage.getItem('discord-webhook-url');
     if (storedWebhookUrl) {
       setDiscordWebhookUrl(storedWebhookUrl);
     }
     
-    // Load tickets from localStorage
     const ticketsString = localStorage.getItem('breathe-tickets');
     if (ticketsString) {
       const tickets = JSON.parse(ticketsString) as Ticket[];
       setAllTickets(tickets);
       
-      // Filter tickets for the current user
       if (currentUser) {
         const userFilteredTickets = tickets.filter(ticket => ticket.userEmail === currentUser);
         setUserTickets(userFilteredTickets);
@@ -105,7 +100,6 @@ const TicketSystem = () => {
       return;
     }
     
-    // Create a new ticket
     const newTicket: Ticket = {
       id: allTickets.length > 0 ? Math.max(...allTickets.map(t => t.id)) + 1 : 1,
       title: data.title,
@@ -123,14 +117,12 @@ const TicketSystem = () => {
       ]
     };
     
-    // Add the new ticket to our state
     const updatedAllTickets = [...allTickets, newTicket];
     const updatedUserTickets = [...userTickets, newTicket];
     
     setAllTickets(updatedAllTickets);
     setUserTickets(updatedUserTickets);
     
-    // Store in localStorage
     localStorage.setItem('breathe-tickets', JSON.stringify(updatedAllTickets));
     
     toast({
@@ -138,10 +130,8 @@ const TicketSystem = () => {
       description: "Your ticket has been submitted successfully. We'll get back to you soon.",
     });
     
-    // Switch to the my-tickets tab
     setActiveTab("my-tickets");
     
-    // Send Discord notification if webhook URL is configured
     if (discordWebhookUrl) {
       try {
         const ticketNotification = {
@@ -150,7 +140,7 @@ const TicketSystem = () => {
             {
               title: data.title,
               description: data.description,
-              color: 3447003, // Blue color
+              color: 3447003,
               fields: [
                 {
                   name: "Contact",
@@ -222,7 +212,6 @@ const TicketSystem = () => {
       timestamp: new Date().toLocaleString()
     };
     
-    // Update the ticket with the new message
     const updatedAllTickets = allTickets.map(ticket => {
       if (ticket.id === selectedTicket.id) {
         return {
@@ -234,7 +223,6 @@ const TicketSystem = () => {
       return ticket;
     });
     
-    // Also update user tickets
     const updatedUserTickets = userTickets.map(ticket => {
       if (ticket.id === selectedTicket.id) {
         return {
@@ -246,14 +234,12 @@ const TicketSystem = () => {
       return ticket;
     });
     
-    // Update the selected ticket with the new message
     const updatedSelectedTicket = updatedAllTickets.find(t => t.id === selectedTicket.id);
     
     setAllTickets(updatedAllTickets);
     setUserTickets(updatedUserTickets);
     setSelectedTicket(updatedSelectedTicket || null);
     
-    // Store updated tickets in localStorage
     localStorage.setItem('breathe-tickets', JSON.stringify(updatedAllTickets));
   };
 
@@ -456,13 +442,11 @@ const TicketSystem = () => {
         </Tabs>
       </motion.div>
       
-      {/* Discord Settings Dialog */}
       <DiscordSettings 
         isOpen={isDiscordSettingsOpen} 
         setIsOpen={setIsDiscordSettingsOpen} 
       />
 
-      {/* Ticket Chat Dialog */}
       <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
         <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
