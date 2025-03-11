@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,8 +10,10 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from '@/hooks/use-toast';
-import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX } from 'lucide-react';
+import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { sendDiscordWebhook } from '@/utils/discordIntegration';
+import DiscordSettings from '@/components/mods/DiscordSettings';
 
 // Schema for validation
 const ticketSchema = z.object({
@@ -31,6 +33,8 @@ const mockTickets = [
 
 const TicketSystem = () => {
   const [activeTab, setActiveTab] = useState("create");
+  const [isDiscordSettingsOpen, setIsDiscordSettingsOpen] = useState(false);
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
   
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketSchema),
@@ -41,7 +45,15 @@ const TicketSystem = () => {
     }
   });
 
-  const onSubmit = (data: TicketFormValues) => {
+  useEffect(() => {
+    // Load Discord webhook URL from localStorage
+    const storedWebhookUrl = localStorage.getItem('discord-webhook-url');
+    if (storedWebhookUrl) {
+      setDiscordWebhookUrl(storedWebhookUrl);
+    }
+  }, []);
+
+  const onSubmit = async (data: TicketFormValues) => {
     console.log("Ticket submitted:", data);
     
     // In a real application, you would send this data to a backend
@@ -49,6 +61,52 @@ const TicketSystem = () => {
       title: "Ticket Created",
       description: "Your ticket has been submitted successfully. We'll get back to you soon.",
     });
+    
+    // Send Discord notification if webhook URL is configured
+    if (discordWebhookUrl) {
+      try {
+        const ticketNotification = {
+          content: "🎫 **New Support Ticket Created**",
+          embeds: [
+            {
+              title: data.title,
+              description: data.description,
+              color: 3447003, // Blue color
+              fields: [
+                {
+                  name: "Contact",
+                  value: data.contactInfo,
+                  inline: true
+                },
+                {
+                  name: "Created At",
+                  value: new Date().toLocaleString(),
+                  inline: true
+                }
+              ],
+              footer: {
+                text: "Ticket System"
+              }
+            }
+          ]
+        };
+        
+        const success = await sendDiscordWebhook(discordWebhookUrl, ticketNotification);
+        
+        if (success) {
+          console.log("Discord notification sent successfully");
+        } else {
+          console.error("Failed to send Discord notification");
+          toast({
+            title: "Discord Notification Failed",
+            description: "The ticket was created, but we couldn't send a notification to Discord.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error sending Discord notification:", error);
+      }
+    }
     
     form.reset();
   };
@@ -80,6 +138,18 @@ const TicketSystem = () => {
           <p className="text-gray-300 text-lg max-w-2xl mx-auto">
             Submit a ticket for mod requests, support, or other inquiries. We'll get back to you as soon as possible.
           </p>
+          
+          <div className="flex justify-center mt-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsDiscordSettingsOpen(true)}
+              className="flex items-center gap-2 text-gray-400 hover:text-white"
+            >
+              <Settings className="h-4 w-4" />
+              Discord Notifications
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="create" className="w-full" onValueChange={setActiveTab}>
@@ -225,6 +295,12 @@ const TicketSystem = () => {
           </TabsContent>
         </Tabs>
       </motion.div>
+      
+      {/* Discord Settings Dialog */}
+      <DiscordSettings 
+        isOpen={isDiscordSettingsOpen} 
+        setIsOpen={setIsDiscordSettingsOpen} 
+      />
     </Layout>
   );
 };
