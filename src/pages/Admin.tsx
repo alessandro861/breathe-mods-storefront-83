@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -19,14 +18,12 @@ const AdminPage = () => {
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   
-  // Redirect non-admin users away from this page
   useEffect(() => {
     if (!isAdmin) {
       navigate('/');
     }
   }, [isAdmin, navigate]);
   
-  // If not admin, show access denied and don't render admin content
   if (!isAdmin) {
     return (
       <Layout>
@@ -81,9 +78,9 @@ const AdminPage = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="users" className="w-full">
+          <Tabs defaultValue="manage-accounts" className="w-full">
             <TabsList className="mb-6 bg-background/50 backdrop-blur-sm border border-white/10">
-              <TabsTrigger value="users">Users</TabsTrigger>
+              <TabsTrigger value="manage-accounts">Manage Accounts</TabsTrigger>
               <TabsTrigger value="purchases">Purchase History</TabsTrigger>
               <TabsTrigger value="tickets" className="flex items-center gap-1">
                 <Ticket className="h-4 w-4" />
@@ -95,7 +92,7 @@ const AdminPage = () => {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="users" className="space-y-4">
+            <TabsContent value="manage-accounts" className="space-y-4">
               <UserList />
             </TabsContent>
             
