@@ -6,7 +6,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShieldAlert, Search, User as UserIcon, Server, ShoppingCart } from 'lucide-react';
-import { getUsers, User } from '@/services/userService';
+import { getUsers, User, Purchase } from '@/services/userService';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
@@ -32,10 +32,10 @@ import {
 const ManageAccounts = () => {
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserType[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
   const usersPerPage = 5;
 
@@ -61,7 +61,7 @@ const ManageAccounts = () => {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-  const viewUserDetails = (user: UserType) => {
+  const viewUserDetails = (user: User) => {
     setSelectedUser(user);
     setIsUserDetailsOpen(true);
   };
@@ -100,7 +100,7 @@ const ManageAccounts = () => {
 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <User className="mr-2 h-5 w-5 text-primary" />
+              <UserIcon className="mr-2 h-5 w-5 text-primary" />
               <h2 className="text-xl font-semibold">User Accounts</h2>
             </div>
             
@@ -202,7 +202,7 @@ const ManageAccounts = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
+                    <UserIcon className="h-5 w-5 text-primary" />
                     <h3 className="text-lg font-semibold">Account Information</h3>
                   </div>
                   <div className="bg-black/20 rounded-lg p-4 space-y-2">
