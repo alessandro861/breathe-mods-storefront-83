@@ -139,12 +139,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link to="/privacy" className="hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
-                <Link to="/faq" className="hover:text-primary transition-colors">
-                  FAQ
-                </Link>
-                <Link to="/about" className="hover:text-primary transition-colors">
-                  About Us
-                </Link>
               </div>
               
               <div className="text-center text-sm text-gray-400">
