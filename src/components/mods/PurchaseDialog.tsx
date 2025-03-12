@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -289,18 +288,6 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
                 <div className="flex justify-between font-medium">
                   <span>Price:</span>
                   <span dangerouslySetInnerHTML={{ __html: modPrice }}></span>
-                </div>
-              </div>
-            )}
-            
-            {!discordWebhookUrl && (
-              <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
-                <div className="flex items-start gap-2 text-amber-700">
-                  <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium">Discord notification not configured</p>
-                    <p className="text-sm">The admin needs to configure Discord webhook settings.</p>
-                  </div>
                 </div>
               </div>
             )}
