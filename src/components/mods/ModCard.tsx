@@ -30,7 +30,7 @@ interface ModCardProps {
   isAdmin: boolean;
   onEdit?: (mod: Mod) => void;
   onDelete?: (id: number) => void;
-  onPurchase?: (mod: Mod) => void; // Added onPurchase prop
+  onPurchase?: (mod: Mod) => void;
 }
 
 const captureConfig = {
@@ -431,6 +431,8 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
 
+  const formattedPrice = !mod.isPaid ? `Repack: ${mod.repackPrice}` : mod.repackPrice;
+
   return (
     <Card className="h-full flex flex-col bg-card/40 backdrop-blur-sm border-white/10 shadow-xl hover:shadow-primary/5 transition-all duration-300">
       <div className="relative h-48 overflow-hidden rounded-t-lg">
@@ -449,7 +451,7 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
       <CardContent className="py-4 flex-grow">
         <h3 className="text-xl font-bold mb-2 text-shine">{mod.title}</h3>
         <p className="text-sm text-gray-300 mb-2">{mod.description}</p>
-        <p className="text-primary font-semibold mt-2" dangerouslySetInnerHTML={{ __html: mod.repackPrice }}></p>
+        <p className="text-primary font-semibold mt-2" dangerouslySetInnerHTML={{ __html: formattedPrice }}></p>
       </CardContent>
       
       <CardFooter className="pt-0 pb-4 flex flex-wrap gap-2">
@@ -535,7 +537,6 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Only show internal purchase dialog if onPurchase is not provided */}
       {!onPurchase && (
         <PurchaseDialog 
           isOpen={showPurchaseDialog} 
