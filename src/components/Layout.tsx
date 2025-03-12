@@ -126,7 +126,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
         
-        <footer className="py-8 px-6">
+        <footer className="py-8 px-6 relative">
           <div className="container mx-auto">
             <div className="max-w-5xl mx-auto pt-6 border-t border-gray-800">
               <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-400 mb-4">
@@ -145,6 +145,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 © {new Date().getFullYear()} Breathe Mods. All rights reserved.
               </div>
             </div>
+          </div>
+          
+          {/* Alessandro credit */}
+          <div className="absolute bottom-2 right-4 text-xs text-gray-500 opacity-70 hover:opacity-100 transition-opacity">
+            Created by Alessandro
           </div>
         </footer>
       </motion.div>
