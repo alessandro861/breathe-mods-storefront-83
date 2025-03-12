@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Plus } from 'lucide-react';
+import { Plus, Ticket } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import ModCard, { Mod } from '@/components/mods/ModCard';
 import ModForm from '@/components/mods/ModForm';
 import PurchaseDialog from '@/components/mods/PurchaseDialog';
+import { Link } from 'react-router-dom';
 
 const initialPaidMods = [
   {
@@ -140,6 +141,18 @@ const PaidMods = () => {
               </DialogContent>
             </Dialog>
           )}
+        </div>
+
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-8 flex items-center justify-between">
+          <div className="flex items-center">
+            <Ticket className="h-5 w-5 text-primary mr-2" />
+            <span className="text-white font-medium">Want a mod? Create a ticket!</span>
+          </div>
+          <Link to="/tickets">
+            <Button size="sm" variant="default">
+              Create Ticket
+            </Button>
+          </Link>
         </div>
 
         {selectedMod && (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Plus, Settings } from 'lucide-react';
+import { Plus, Settings, Ticket } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import ModForm from '@/components/mods/ModForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DiscordSettings from '@/components/mods/DiscordSettings';
 import PurchaseDialog from '@/components/mods/PurchaseDialog';
+import { Link } from 'react-router-dom';
 
 const initialFreeMods = [
   {
@@ -211,6 +212,18 @@ const FreeMods = () => {
               </>
             )}
           </div>
+        </div>
+        
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-8 flex items-center justify-between">
+          <div className="flex items-center">
+            <Ticket className="h-5 w-5 text-primary mr-2" />
+            <span className="text-white font-medium">Want a mod? Create a ticket!</span>
+          </div>
+          <Link to="/tickets">
+            <Button size="sm" variant="default">
+              Create Ticket
+            </Button>
+          </Link>
         </div>
         
         <DiscordSettings 
