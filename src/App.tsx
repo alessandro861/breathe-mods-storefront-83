@@ -17,6 +17,7 @@ import Request from './pages/Request';
 import TicketSystem from './pages/TicketSystem';
 import Contact from './pages/Contact';
 import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import { AdminProvider } from './hooks/useAdmin';
 import { addSampleData } from './services/userService';
 
@@ -42,7 +43,7 @@ function App() {
           <Route path="/request" element={<Request />} />
           <Route path="/tickets" element={<TicketSystem />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<ComingSoon />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/faq" element={<ComingSoon />} />
           <Route path="/about" element={<ComingSoon />} />
