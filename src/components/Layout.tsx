@@ -7,6 +7,7 @@ import { Construction, LogIn, LogOut, Shield, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/hooks/useAdmin';
 import { getCurrentUser, clearUserSession } from '@/services/userService';
+import { useToast } from '@/hooks/use-toast';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAdmin, logout: logoutAdmin } = useAdmin();
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   useEffect(() => {
     const user = getCurrentUser();
@@ -46,6 +48,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
     setCurrentUser(null);
     navigate('/');
+  };
+  
+  const showDiscord = () => {
+    toast({
+      title: "Discord Contact",
+      description: "wizstormz18",
+      duration: 5000,
+    });
   };
   
   return (
@@ -148,7 +158,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
           
           {/* Alessandro credit */}
-          <div className="absolute bottom-2 right-4 text-xs text-gray-500 opacity-70 hover:opacity-100 transition-opacity">
+          <div 
+            className="absolute bottom-2 right-4 text-xs text-gray-500 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+            onClick={showDiscord}
+          >
             Created by Alessandro
           </div>
         </footer>
