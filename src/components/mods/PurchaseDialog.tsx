@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -19,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Send, Flag, DollarSign, AlertCircle, AtSign, Server, Globe, Plug } from 'lucide-react';
+import { Shield, Send, Flag, DollarSign, AtSign, Server, Globe, Plug } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -89,15 +90,12 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       // Determine the price based on the selected option
       const selectedPrice = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
       
-      let notificationSent = false;
-      let webhookError = false;
+      // Try to send Discord notification
+      console.log("Sending Discord notification...");
+      console.log("Webhook URL:", discordWebhookUrl ? "URL exists" : "No URL");
       
-      // Check if webhook URL is configured
-      if (!discordWebhookUrl) {
-        console.warn("Discord webhook URL is not configured");
-        webhookError = true;
-      } else {
-        // Create message with mention and all the new fields
+      if (discordWebhookUrl) {
+        // Create message with mention and all the fields
         const message = createDiscordPurchaseMessage(
           modTitle,
           data.discordUsername,
@@ -108,49 +106,34 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
           discordUserIdToPing
         );
         
-        console.log("Sending Discord notification with user mention...");
-        notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
+        console.log("Discord message content:", message);
         
-        if (!notificationSent) {
-          webhookError = true;
-        }
+        // Send notification - await the result
+        const notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
+        console.log("Discord notification sent:", notificationSent);
+      } else {
+        console.warn("No Discord webhook URL configured");
       }
       
       // Simulate processing time (in a real app, this would be your payment processing)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Show appropriate toast message
-      if (notificationSent) {
-        toast({
-          title: "Purchase processed",
-          description: `You have purchased ${modTitle} (${selectedPrice}). A notification has been sent to our Discord.`,
-        });
-      } else {
-        toast({
-          title: "Purchase processed",
-          description: (
-            <div className="flex flex-col gap-2">
-              <p>You have purchased {modTitle} ({selectedPrice}).</p>
-              {webhookError && (
-                <div className="flex items-center gap-2 text-amber-500 bg-amber-50 p-2 rounded-md text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>Discord notification could not be sent. Please check Discord settings.</span>
-                </div>
-              )}
-            </div>
-          ),
-        });
-      }
+      // Show success message
+      toast({
+        title: "Purchase processed",
+        description: `You have purchased ${modTitle} (${selectedPrice}).`,
+      });
       
       form.reset();
       setIsOpen(false);
     } catch (error) {
+      console.error("Purchase error:", error);
+      
       toast({
         title: "Error",
         description: "An error occurred while processing your purchase. Please try again.",
         variant: "destructive",
       });
-      console.error("Purchase error:", error);
     } finally {
       setIsSubmitting(false);
     }
