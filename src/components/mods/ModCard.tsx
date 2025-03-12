@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -469,6 +470,17 @@ const ModCard: React.FC<ModCardProps> = ({ mod, isAdmin, onEdit, onDelete, onPur
             {mod.isPaid ? "View Preview" : "View on Workshop"}
           </Button>
         </a>
+        
+        {!mod.isPaid && (
+          <Button 
+            variant="default" 
+            className="w-full text-sm"
+            onClick={() => onPurchase ? onPurchase(mod) : setShowPurchaseDialog(true)}
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Purchase a Repack
+          </Button>
+        )}
         
         {mod.title === "Capture Flag" && (
           <Button 
