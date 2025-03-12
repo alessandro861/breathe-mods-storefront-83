@@ -15,6 +15,7 @@ import Rules from './pages/Rules';
 import WorkInProgress from './pages/WorkInProgress';
 import Request from './pages/Request';
 import TicketSystem from './pages/TicketSystem';
+import Contact from './pages/Contact';
 import { AdminProvider } from './hooks/useAdmin';
 import { addSampleData } from './services/userService';
 
@@ -39,9 +40,9 @@ function App() {
           <Route path="/wip" element={<WorkInProgress />} />
           <Route path="/request" element={<Request />} />
           <Route path="/tickets" element={<TicketSystem />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<ComingSoon />} />
           <Route path="/terms" element={<ComingSoon />} />
-          <Route path="/contact" element={<ComingSoon />} />
           <Route path="/faq" element={<ComingSoon />} />
           <Route path="/about" element={<ComingSoon />} />
           <Route path="*" element={<NotFound />} />
