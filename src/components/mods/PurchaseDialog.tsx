@@ -63,7 +63,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // Get Discord webhook URL from localStorage
+  // IMPORTANT FIX: Use the same webhook URL used in DiscordSettings
   const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
   // ID of the Discord user to mention
   const discordUserIdToPing = '1336727014291275829';
@@ -106,13 +106,19 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
           discordUserIdToPing
         );
         
-        console.log("Discord message content:", message);
+        console.log("Discord message prepared:", message);
         
         // Send notification - await the result
         const notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
-        console.log("Discord notification sent:", notificationSent);
+        console.log("Discord notification result:", notificationSent ? "Success" : "Failed");
+        
+        if (notificationSent) {
+          console.log("Purchase notification sent successfully to Discord");
+        } else {
+          console.error("Failed to send purchase notification to Discord");
+        }
       } else {
-        console.warn("No Discord webhook URL configured");
+        console.warn("No Discord webhook URL configured - skipping notification");
       }
       
       // Simulate processing time (in a real app, this would be your payment processing)

@@ -30,10 +30,13 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   
-  // Update webhookUrl when localStorage changes
+  // Update webhookUrl when localStorage changes or dialog opens
   useEffect(() => {
-    const savedWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
-    setWebhookUrl(savedWebhookUrl);
+    if (isOpen) {
+      const savedWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
+      setWebhookUrl(savedWebhookUrl);
+      console.log("DiscordSettings opened, loaded webhook URL:", savedWebhookUrl ? "URL exists" : "No URL");
+    }
   }, [isOpen]); // Refresh when dialog opens
   
   const handleSave = () => {
@@ -53,7 +56,7 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
       
       // Save the webhook URL to localStorage
       localStorage.setItem('discord-webhook-url', webhookUrl);
-      console.log('Saved webhook URL to localStorage:', webhookUrl);
+      console.log('Saved webhook URL to localStorage:', webhookUrl ? "URL saved" : "Cleared URL");
       
       // Show success message
       toast({
@@ -92,9 +95,9 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
         username: "Breathe Test Bot",
       };
       
-      console.log('Testing webhook with URL:', webhookUrl);
+      console.log('Testing webhook with URL:', webhookUrl ? "URL exists" : "No URL");
       const success = await sendDiscordWebhook(webhookUrl, testMessage);
-      console.log('Test webhook result:', success);
+      console.log('Test webhook result:', success ? "Success" : "Failed");
       
       if (success) {
         toast({

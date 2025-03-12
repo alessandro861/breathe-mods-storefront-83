@@ -1,3 +1,4 @@
+
 /**
  * Discord integration utilities
  */
@@ -14,18 +15,22 @@ export const sendDiscordWebhook = async (
 ): Promise<boolean> => {
   try {
     if (!webhookUrl) {
-      console.error("Discord webhook URL is required");
+      console.error("[Discord] Webhook URL is empty or null");
       return false;
     }
 
     // Check if it's a valid Discord webhook URL
     if (!webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
-      console.error("Invalid Discord webhook URL format");
+      console.error("[Discord] Invalid webhook URL format:", webhookUrl.substring(0, 15) + "...");
       return false;
     }
 
     console.log(`[Discord] Sending notification to webhook: ${webhookUrl.substring(0, 40)}...`);
-    console.log(`[Discord] Content:`, message);
+    
+    // Log first 100 chars of content if it exists
+    if (message && message.content) {
+      console.log(`[Discord] Message preview: ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`);
+    }
 
     const response = await fetch(webhookUrl, {
       method: "POST",
