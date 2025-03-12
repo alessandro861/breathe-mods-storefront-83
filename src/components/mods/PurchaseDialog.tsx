@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Send, Flag, DollarSign, AlertCircle } from 'lucide-react';
+import { Shield, Send, Flag, DollarSign, AlertCircle, AtSign, Server, Globe, Plug } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,8 +31,14 @@ const purchaseFormSchema = z.object({
   discordUsername: z.string().min(2, {
     message: "Discord username must be at least 2 characters.",
   }),
+  serverName: z.string().min(2, {
+    message: "Server name must be at least 2 characters.",
+  }),
   serverIP: z.string().min(7, { 
     message: "Please enter a valid server IP address." 
+  }),
+  serverPort: z.string().min(1, {
+    message: "Please enter a valid server port."
   }),
   priceOption: z.enum(['basic', 'withEMP'], {
     required_error: "Please select a price option.",
@@ -67,7 +73,9 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     resolver: zodResolver(purchaseFormSchema),
     defaultValues: {
       discordUsername: "",
+      serverName: "",
       serverIP: "",
+      serverPort: "",
       priceOption: "basic",
     },
   });
@@ -90,11 +98,13 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
         console.warn("Discord webhook URL is not configured");
         webhookError = true;
       } else {
-        // Create message with mention
+        // Create message with mention and all the new fields
         const message = createDiscordPurchaseMessage(
           modTitle,
           data.discordUsername,
+          data.serverName,
           data.serverIP,
+          data.serverPort,
           selectedPrice,
           discordUserIdToPing
         );
@@ -170,9 +180,29 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
               name="discordUsername"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Discord Username</FormLabel>
+                  <FormLabel className="flex items-center gap-1">
+                    <AtSign className="h-4 w-4 text-muted-foreground" />
+                    Discord Username
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="username#1234" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="serverName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Server className="h-4 w-4 text-muted-foreground" />
+                    Name of Server
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="My Awesome Server" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -184,9 +214,29 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
               name="serverIP"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Server IP</FormLabel>
+                  <FormLabel className="flex items-center gap-1">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Server IP
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="000.000.000.000" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="serverPort"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Plug className="h-4 w-4 text-muted-foreground" />
+                    Server Port
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="30120" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

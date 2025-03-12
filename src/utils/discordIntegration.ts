@@ -1,4 +1,3 @@
-
 /**
  * Discord integration utilities
  */
@@ -111,7 +110,9 @@ export const assignRoleViaZapier = async (
  * Creates a formatted message for Discord
  * @param modTitle - Mod title
  * @param discordUsername - Discord username
+ * @param serverName - Server name
  * @param serverIP - Server IP
+ * @param serverPort - Server port
  * @param price - Price
  * @param pingUserId - Discord user ID to mention (optional)
  * @returns Object - Formatted message for Discord
@@ -119,12 +120,19 @@ export const assignRoleViaZapier = async (
 export const createDiscordPurchaseMessage = (
   modTitle: string,
   discordUsername: string,
+  serverName: string,
   serverIP: string,
+  serverPort: string,
   price: string,
   pingUserId?: string
 ) => {
   // Format the content with important information in bold
-  let content = `**New Order: ${modTitle}**\nDiscord: **${discordUsername}**\nServer IP: **${serverIP}**\nPrice: **${price.replace(/<br\/>/g, " - ")}**`;
+  let content = `**New Order: ${modTitle}**\n` +
+    `Discord: **${discordUsername}**\n` +
+    `Server Name: **${serverName}**\n` +
+    `Server IP: **${serverIP}**\n` + 
+    `Server Port: **${serverPort}**\n` +
+    `Price: **${price.replace(/<br\/>/g, " - ")}**`;
   
   // Add a mention if an ID is provided
   if (pingUserId) {
