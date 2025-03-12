@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
@@ -145,6 +146,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   About Us
                 </Link>
               </div>
+              
+              <div className="text-center space-y-2 mb-4">
+                <div className="text-sm text-gray-400">
+                  <span className="font-semibold">E-Mail:</span> coming soon
+                </div>
+                <div className="text-sm text-gray-400">
+                  <span className="font-semibold">Discord PM:</span> kokos_dv
+                </div>
+                <div className="text-sm text-gray-400">
+                  <span className="font-semibold">Discord Server:</span> 
+                  <a 
+                    href="https://discord.gg/c4arcAJrU5" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-primary transition-colors ml-1"
+                  >
+                    https://discord.gg/c4arcAJrU5
+                  </a>
+                </div>
+              </div>
+              
               <div className="text-center text-sm text-gray-400">
                 © {new Date().getFullYear()} Breathe Mods. All rights reserved.
               </div>
