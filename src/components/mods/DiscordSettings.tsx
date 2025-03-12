@@ -35,7 +35,7 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
     if (isOpen) {
       const savedWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
       setWebhookUrl(savedWebhookUrl);
-      console.log("DiscordSettings opened, loaded webhook URL:", savedWebhookUrl ? "URL exists" : "No URL");
+      console.log("[DiscordSettings] Opened, loaded webhook URL:", savedWebhookUrl ? "URL exists" : "No URL");
     }
   }, [isOpen]); // Refresh when dialog opens
   
@@ -56,7 +56,12 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
       
       // Save the webhook URL to localStorage
       localStorage.setItem('discord-webhook-url', webhookUrl);
-      console.log('Saved webhook URL to localStorage:', webhookUrl ? "URL saved" : "Cleared URL");
+      console.log('[DiscordSettings] Saved webhook URL:', webhookUrl ? "URL saved" : "Cleared URL");
+      
+      // Double-check that it was saved correctly
+      const storedUrl = localStorage.getItem('discord-webhook-url') || '';
+      console.log('[DiscordSettings] Verified stored URL:', 
+        storedUrl === webhookUrl ? "Matches input" : "ERROR: Doesn't match input");
       
       // Show success message
       toast({
@@ -72,7 +77,7 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
         description: "An error occurred while saving the settings.",
         variant: "destructive",
       });
-      console.error("Error saving Discord settings:", error);
+      console.error("[DiscordSettings] Error saving:", error);
     } finally {
       setIsSaving(false);
     }
@@ -95,9 +100,9 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
         username: "Breathe Test Bot",
       };
       
-      console.log('Testing webhook with URL:', webhookUrl ? "URL exists" : "No URL");
+      console.log('[DiscordSettings] Testing webhook...');
       const success = await sendDiscordWebhook(webhookUrl, testMessage);
-      console.log('Test webhook result:', success ? "Success" : "Failed");
+      console.log('[DiscordSettings] Test result:', success ? "Success" : "Failed");
       
       if (success) {
         toast({
@@ -117,7 +122,7 @@ const DiscordSettings: React.FC<DiscordSettingsProps> = ({
         description: "Failed to connect to Discord. Check the URL and your internet connection.",
         variant: "destructive",
       });
-      console.error("Error testing webhook:", error);
+      console.error("[DiscordSettings] Error testing webhook:", error);
     }
   };
 

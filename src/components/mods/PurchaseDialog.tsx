@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -63,10 +63,20 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
-  // IMPORTANT FIX: Use the same webhook URL used in DiscordSettings
-  const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
+  // Store webhook URL in state and refresh it each time the dialog opens
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState('');
+  
   // ID of the Discord user to mention
   const discordUserIdToPing = '1336727014291275829';
+
+  // Refresh webhook URL when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      const storedWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
+      setDiscordWebhookUrl(storedWebhookUrl);
+      console.log("[PurchaseDialog] Loaded Discord webhook URL:", storedWebhookUrl ? "URL exists" : "No URL found");
+    }
+  }, [isOpen]);
 
   // Initialize form with validation
   const form = useForm<PurchaseFormValues>({
@@ -84,17 +94,20 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      console.log("Processing purchase for mod:", modTitle);
-      console.log("User data:", data);
+      console.log("[Purchase] Processing purchase for mod:", modTitle);
+      console.log("[Purchase] User data:", data);
+      
+      // Refresh the webhook URL right before sending to ensure it's the latest
+      const freshWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
       
       // Determine the price based on the selected option
       const selectedPrice = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
       
       // Try to send Discord notification
-      console.log("Sending Discord notification...");
-      console.log("Webhook URL:", discordWebhookUrl ? "URL exists" : "No URL");
+      console.log("[Purchase] Attempting Discord notification...");
+      console.log("[Purchase] Using webhook URL:", freshWebhookUrl ? "URL exists" : "No URL");
       
-      if (discordWebhookUrl) {
+      if (freshWebhookUrl) {
         // Create message with mention and all the fields
         const message = createDiscordPurchaseMessage(
           modTitle,
@@ -106,19 +119,19 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
           discordUserIdToPing
         );
         
-        console.log("Discord message prepared:", message);
-        
         // Send notification - await the result
-        const notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
-        console.log("Discord notification result:", notificationSent ? "Success" : "Failed");
+        console.log("[Purchase] Sending to Discord webhook...");
+        const notificationSent = await sendDiscordWebhook(freshWebhookUrl, message);
+        console.log("[Purchase] Discord notification result:", notificationSent ? "Success" : "Failed");
         
         if (notificationSent) {
-          console.log("Purchase notification sent successfully to Discord");
+          console.log("[Purchase] Notification sent successfully to Discord");
         } else {
-          console.error("Failed to send purchase notification to Discord");
+          console.error("[Purchase] Failed to send notification to Discord");
+          // Don't show error to user - we'll still process the purchase
         }
       } else {
-        console.warn("No Discord webhook URL configured - skipping notification");
+        console.warn("[Purchase] No Discord webhook URL configured - skipping notification");
       }
       
       // Simulate processing time (in a real app, this would be your payment processing)
@@ -133,7 +146,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       form.reset();
       setIsOpen(false);
     } catch (error) {
-      console.error("Purchase error:", error);
+      console.error("[Purchase] Error:", error);
       
       toast({
         title: "Error",

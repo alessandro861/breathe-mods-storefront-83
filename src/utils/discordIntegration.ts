@@ -32,13 +32,19 @@ export const sendDiscordWebhook = async (
       console.log(`[Discord] Message preview: ${message.content.substring(0, 100)}${message.content.length > 100 ? '...' : ''}`);
     }
 
+    // Fixed issue: ensure proper JSON serialization for the body
+    const jsonBody = JSON.stringify(message);
+    console.log("[Discord] Request body size:", jsonBody.length, "bytes");
+
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(message),
+      body: jsonBody,
     });
+
+    console.log("[Discord] Response status:", response.status);
 
     if (response.ok) {
       console.log('[Discord] Notification sent successfully');
@@ -54,6 +60,7 @@ export const sendDiscordWebhook = async (
         console.error('[Discord] Webhook not found. Check if the URL is correct.');
       } else if (response.status === 400) {
         console.error('[Discord] Bad request. Message format might be invalid.');
+        console.error('[Discord] Message that caused the error:', JSON.stringify(message));
       }
       
       return false;
