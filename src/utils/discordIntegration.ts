@@ -159,6 +159,40 @@ export const createDiscordPurchaseMessage = (
 };
 
 /**
+ * Creates a formatted message for purchase updates
+ * @param modTitle - Mod title
+ * @param serverName - Updated server name
+ * @param serverIP - Updated server IP
+ * @param serverPort - Updated server port
+ * @param pingUserId - Discord user ID to mention (optional)
+ * @returns Object - Formatted message for Discord
+ */
+export const createDiscordUpdateMessage = (
+  modTitle: string,
+  serverName: string,
+  serverIP: string,
+  serverPort: string,
+  pingUserId?: string
+) => {
+  // Format the content with important information in bold
+  let content = `🔄 **Purchase Update: ${modTitle}**\n` +
+    `Server Name: **${serverName}** (Updated)\n` +
+    `Server IP: **${serverIP}** (Updated)\n` + 
+    `Server Port: **${serverPort}** (Updated)\n`;
+  
+  // Add a mention if an ID is provided
+  if (pingUserId) {
+    content = `<@${pingUserId}> ${content}`;
+  }
+  
+  return {
+    content: content,
+    username: "Breathe Mods Bot",
+    avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
+  };
+};
+
+/**
  * Creates a formatted message for ticket notifications
  * @param ticketId - Ticket ID
  * @param ticketTitle - Ticket title

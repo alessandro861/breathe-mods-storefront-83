@@ -18,6 +18,7 @@ import TicketSystem from './pages/TicketSystem';
 import Contact from './pages/Contact';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import UserPurchases from './pages/UserPurchases';
 import { AdminProvider } from './hooks/useAdmin';
 import { addSampleData } from './services/userService';
 
@@ -45,6 +46,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/purchases" element={<UserPurchases />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />

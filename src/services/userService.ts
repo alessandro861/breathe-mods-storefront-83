@@ -13,6 +13,8 @@ export interface Purchase {
   date: string;
   price: number;
   serverIp?: string;
+  serverName?: string;
+  serverPort?: string;
 }
 
 // Retrieve users from localStorage
@@ -110,6 +112,42 @@ export const addPurchase = (email: string, purchase: Purchase): boolean => {
   }
 };
 
+// Get user purchases
+export const getUserPurchases = (email: string): Purchase[] => {
+  const user = getUserByEmail(email);
+  return user?.purchases || [];
+};
+
+// Update purchase
+export const updatePurchase = (email: string, purchaseId: string, updatedData: Partial<Purchase>): boolean => {
+  try {
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.email === email);
+    
+    if (userIndex === -1 || !users[userIndex].purchases) {
+      return false;
+    }
+    
+    const purchaseIndex = users[userIndex].purchases?.findIndex(p => p.id === purchaseId);
+    
+    if (purchaseIndex === -1 || purchaseIndex === undefined) {
+      return false;
+    }
+    
+    // Update the purchase
+    users[userIndex].purchases![purchaseIndex] = {
+      ...users[userIndex].purchases![purchaseIndex],
+      ...updatedData
+    };
+    
+    localStorage.setItem('breathe-users', JSON.stringify(users));
+    return true;
+  } catch (error) {
+    console.error('Error updating purchase:', error);
+    return false;
+  }
+};
+
 // Mock method to add sample data for demonstration
 export const addSampleData = (): void => {
   const sampleUsers: User[] = [
@@ -124,7 +162,9 @@ export const addSampleData = (): void => {
           productName: "Combat Mod Pack",
           date: "2023-06-15",
           price: 19.99,
-          serverIp: "mc.server1.com"
+          serverIp: "192.168.1.101",
+          serverName: "My Awesome Server",
+          serverPort: "30120"
         }
       ]
     },
@@ -139,14 +179,18 @@ export const addSampleData = (): void => {
           productName: "Graphics Overhaul",
           date: "2023-07-22",
           price: 24.99,
-          serverIp: "play.myserver.net"
+          serverIp: "play.myserver.net",
+          serverName: "Gaming Central",
+          serverPort: "25565"
         },
         {
           id: "p3",
           productName: "Economy Mod",
           date: "2023-08-05",
           price: 14.99,
-          serverIp: "play.myserver.net"
+          serverIp: "play.myserver.net",
+          serverName: "Gaming Central",
+          serverPort: "25565"
         }
       ]
     }

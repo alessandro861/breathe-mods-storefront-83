@@ -25,6 +25,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { createDiscordPurchaseMessage, sendDiscordWebhook } from '@/utils/discordIntegration';
+import { getCurrentUser, addPurchase } from '@/services/userService';
+import { useNavigate } from 'react-router-dom';
 
 // Define the form schema with validation
 const purchaseFormSchema = z.object({
@@ -62,6 +64,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Store webhook URL in state and refresh it each time the dialog opens
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState('');
@@ -101,7 +104,37 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       const freshWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
       
       // Determine the price based on the selected option
-      const selectedPrice = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
+      const selectedPriceText = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
+      const selectedPrice = data.priceOption === 'basic' ? 45 : 65;
+      
+      // Generate a unique ID for the purchase
+      const purchaseId = `p${Date.now()}`;
+      
+      // Check if user is logged in
+      const userEmail = getCurrentUser();
+      
+      // If logged in, save the purchase to user account
+      if (userEmail) {
+        const purchaseData = {
+          id: purchaseId,
+          productName: modTitle,
+          date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
+          price: selectedPrice,
+          serverIp: data.serverIP,
+          serverName: data.serverName,
+          serverPort: data.serverPort
+        };
+        
+        const purchaseSaved = addPurchase(userEmail, purchaseData);
+        
+        if (!purchaseSaved) {
+          console.error("[Purchase] Failed to save purchase to user account");
+        } else {
+          console.log("[Purchase] Purchase saved to user account:", purchaseData);
+        }
+      } else {
+        console.log("[Purchase] User not logged in - purchase not saved to account");
+      }
       
       // Try to send Discord notification
       console.log("[Purchase] Attempting Discord notification...");
@@ -115,7 +148,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
           data.serverName,
           data.serverIP,
           data.serverPort,
-          selectedPrice,
+          selectedPriceText,
           discordUserIdToPing
         );
         
@@ -140,11 +173,30 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       // Show success message
       toast({
         title: "Purchase processed",
-        description: `You have purchased ${modTitle} (${selectedPrice}).`,
+        description: userEmail 
+          ? `You have purchased ${modTitle} (${selectedPriceText}). You can view and manage this purchase in your account.`
+          : `You have purchased ${modTitle} (${selectedPriceText}). Create an account to manage your purchases.`,
+        duration: 5000
       });
       
       form.reset();
       setIsOpen(false);
+      
+      // If the user is logged in, suggest navigating to their purchases
+      if (userEmail) {
+        setTimeout(() => {
+          toast({
+            title: "View your purchases",
+            description: "Would you like to view and manage your purchases?",
+            action: (
+              <Button variant="outline" onClick={() => navigate('/purchases')}>
+                Go to Purchases
+              </Button>
+            ),
+            duration: 8000
+          });
+        }, 1000);
+      }
     } catch (error) {
       console.error("[Purchase] Error:", error);
       
