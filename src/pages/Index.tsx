@@ -4,10 +4,13 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import NavButton from '../components/NavButton';
 import { Button } from '@/components/ui/button';
-import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer } from 'lucide-react';
+import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getCurrentUser } from '@/services/userService';
 
 const Index: React.FC = () => {
+  const currentUser = getCurrentUser();
+  
   return (
     <Layout>
       <div className="container mx-auto flex flex-col items-center justify-center space-y-20">
@@ -38,6 +41,14 @@ const Index: React.FC = () => {
                   Join Discord
                 </Button>
               </a>
+              {currentUser && (
+                <Link to="/purchases">
+                  <Button size="lg" variant="secondary" className="text-md">
+                    <ShoppingBag className="mr-2 h-5 w-5" />
+                    My Purchases
+                  </Button>
+                </Link>
+              )}
             </motion.div>
           </motion.div>
         </section>
@@ -87,7 +98,7 @@ const Index: React.FC = () => {
         {/* Quick Access */}
         <section className="w-full">
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl mx-auto"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-5xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.7, duration: 0.5 }}
@@ -95,6 +106,9 @@ const Index: React.FC = () => {
             <NavButton to="/rules" label="Rules" icon={<Shield className="h-5 w-5 text-primary" />} delay={0.1} />
             <NavButton to="/free-mods" label="Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
             <NavButton to="/tickets" label="Ticket System" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
+            {currentUser && (
+              <NavButton to="/purchases" label="My Purchases" icon={<ShoppingBag className="h-5 w-5 text-primary" />} delay={0.6} comingSoon={false} />
+            )}
           </motion.div>
         </section>
       </div>
