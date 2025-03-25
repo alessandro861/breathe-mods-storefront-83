@@ -1,203 +1,160 @@
-
-export interface User {
-  username?: string;
+// userService.ts
+interface User {
   email: string;
-  password: string;
-  ipAddress?: string;
-  purchases?: Purchase[];
+  password?: string;
 }
 
-export interface Purchase {
-  id: string;
-  productName: string;
-  date: string;
-  price: number;
-  serverIp?: string;
-  serverName?: string;
-  serverPort?: string;
+const USERS_KEY = 'users';
+
+// Initialize users in localStorage if they don't exist
+if (!localStorage.getItem(USERS_KEY)) {
+  localStorage.setItem(USERS_KEY, JSON.stringify([]));
 }
 
-// Retrieve users from localStorage
-export const getUsers = (): User[] => {
-  const usersString = localStorage.getItem('breathe-users');
-  return usersString ? JSON.parse(usersString) : [];
-};
-
-// Save a new user
-export const saveUser = (user: User): boolean => {
-  try {
-    const users = getUsers();
-    
-    // Check if email already exists
-    if (users.some(u => u.email === user.email)) {
-      return false;
-    }
-    
-    users.push(user);
-    localStorage.setItem('breathe-users', JSON.stringify(users));
-    return true;
-  } catch (error) {
-    console.error('Error saving user:', error);
-    return false;
+// Function to add sample data (for testing purposes)
+export const addSampleData = () => {
+  let users = getUsers();
+  if (users.length === 0) {
+    const sampleUsers = [
+      { email: 'admin@gmail.com', password: 'Admin1234!' },
+      { email: 'user1@example.com', password: 'User1234!' },
+      { email: 'user2@example.com', password: 'User5678!' },
+    ];
+    saveUsers(sampleUsers);
+    console.log('Sample users added to localStorage');
+  } else {
+    console.log('Users already exist in localStorage, skipping sample data addition');
   }
 };
 
-// Validate login credentials
-export const validateLogin = (email: string, password: string): boolean => {
-  const users = getUsers();
-  return users.some(user => user.email === email && user.password === password);
+// Function to get users from localStorage
+export const getUsers = (): User[] => {
+  const usersJson = localStorage.getItem(USERS_KEY);
+  return usersJson ? JSON.parse(usersJson) : [];
 };
 
-// Save current user session
-export const saveUserSession = (email: string): void => {
-  localStorage.setItem('breathe-current-user', email);
+// Function to save users to localStorage
+const saveUsers = (users: User[]) => {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 
-// Get current user session
-export const getCurrentUser = (): string | null => {
-  return localStorage.getItem('breathe-current-user');
-};
-
-// Clear user session
-export const clearUserSession = (): void => {
-  localStorage.removeItem('breathe-current-user');
-};
-
-// Get user data by email
-export const getUserByEmail = (email: string): User | null => {
+// Function to validate login credentials
+export const validateLogin = (email: string, password?: string): boolean => {
   const users = getUsers();
   const user = users.find(u => u.email === email);
-  return user || null;
+  return !!user && user.password === password;
 };
 
-// Update user data
-export const updateUser = (email: string, userData: Partial<User>): boolean => {
-  try {
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.email === email);
-    
-    if (userIndex === -1) {
-      return false;
-    }
-    
-    users[userIndex] = { ...users[userIndex], ...userData };
-    localStorage.setItem('breathe-users', JSON.stringify(users));
-    return true;
-  } catch (error) {
-    console.error('Error updating user:', error);
-    return false;
-  }
+// Function to save user session (in a real app, use a more secure method)
+export const saveUserSession = (email: string) => {
+  localStorage.setItem('currentUser', email);
 };
 
-// Add a purchase to user
-export const addPurchase = (email: string, purchase: Purchase): boolean => {
-  try {
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.email === email);
-    
-    if (userIndex === -1) {
-      return false;
-    }
-    
-    if (!users[userIndex].purchases) {
-      users[userIndex].purchases = [];
-    }
-    
-    users[userIndex].purchases?.push(purchase);
-    localStorage.setItem('breathe-users', JSON.stringify(users));
-    return true;
-  } catch (error) {
-    console.error('Error adding purchase:', error);
-    return false;
-  }
+// Function to get current user from session
+export const getCurrentUser = (): string | null => {
+  return localStorage.getItem('currentUser');
 };
 
-// Get user purchases
-export const getUserPurchases = (email: string): Purchase[] => {
-  const user = getUserByEmail(email);
-  return user?.purchases || [];
+// Function to clear user session
+export const clearUserSession = () => {
+  localStorage.removeItem('currentUser');
 };
 
-// Update purchase
-export const updatePurchase = (email: string, purchaseId: string, updatedData: Partial<Purchase>): boolean => {
-  try {
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.email === email);
-    
-    if (userIndex === -1 || !users[userIndex].purchases) {
-      return false;
-    }
-    
-    const purchaseIndex = users[userIndex].purchases?.findIndex(p => p.id === purchaseId);
-    
-    if (purchaseIndex === -1 || purchaseIndex === undefined) {
-      return false;
-    }
-    
-    // Update the purchase
-    users[userIndex].purchases![purchaseIndex] = {
-      ...users[userIndex].purchases![purchaseIndex],
-      ...updatedData
-    };
-    
-    localStorage.setItem('breathe-users', JSON.stringify(users));
-    return true;
-  } catch (error) {
-    console.error('Error updating purchase:', error);
-    return false;
-  }
+// Password reset functionality
+const RESET_TOKENS_KEY = 'reset_tokens';
+
+interface ResetToken {
+  email: string;
+  token: string;
+  expiry: number; // timestamp
+}
+
+// Get all reset tokens
+export const getResetTokens = (): ResetToken[] => {
+  const tokensJson = localStorage.getItem(RESET_TOKENS_KEY);
+  return tokensJson ? JSON.parse(tokensJson) : [];
 };
 
-// Mock method to add sample data for demonstration
-export const addSampleData = (): void => {
-  const sampleUsers: User[] = [
-    {
-      email: "user1@example.com",
-      password: "password123",
-      username: "User One",
-      ipAddress: "192.168.1.101",
-      purchases: [
-        {
-          id: "p1",
-          productName: "Combat Mod Pack",
-          date: "2023-06-15",
-          price: 19.99,
-          serverIp: "192.168.1.101",
-          serverName: "My Awesome Server",
-          serverPort: "30120"
-        }
-      ]
-    },
-    {
-      email: "user2@example.com",
-      password: "password123",
-      username: "User Two",
-      ipAddress: "192.168.1.102",
-      purchases: [
-        {
-          id: "p2",
-          productName: "Graphics Overhaul",
-          date: "2023-07-22",
-          price: 24.99,
-          serverIp: "play.myserver.net",
-          serverName: "Gaming Central",
-          serverPort: "25565"
-        },
-        {
-          id: "p3",
-          productName: "Economy Mod",
-          date: "2023-08-05",
-          price: 14.99,
-          serverIp: "play.myserver.net",
-          serverName: "Gaming Central",
-          serverPort: "25565"
-        }
-      ]
-    }
-  ];
+// Save reset tokens
+const saveResetTokens = (tokens: ResetToken[]) => {
+  localStorage.setItem(RESET_TOKENS_KEY, JSON.stringify(tokens));
+};
+
+// Generate a reset token for an email
+export const generateResetToken = (email: string): string | null => {
+  // Verify that the user exists
+  const users = getUsers();
+  const userExists = users.some(user => user.email === email);
   
-  // Only add sample data if there are no users
-  if (getUsers().length === 0) {
-    localStorage.setItem('breathe-users', JSON.stringify(sampleUsers));
+  if (!userExists) {
+    // For security reasons, we should not inform the user that the email doesn't exist
+    // But we won't generate a token either
+    return null;
   }
+  
+  // Generate a random token
+  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  
+  // Set expiry to 24 hours from now
+  const expiry = Date.now() + (24 * 60 * 60 * 1000);
+  
+  // Save the token
+  const tokens = getResetTokens();
+  
+  // Remove any existing tokens for this email
+  const filteredTokens = tokens.filter(t => t.email !== email);
+  
+  // Add the new token
+  filteredTokens.push({ email, token, expiry });
+  
+  // Save tokens back to localStorage
+  saveResetTokens(filteredTokens);
+  
+  return token;
+};
+
+// Validate reset token
+export const validateResetToken = (email: string, token: string): boolean => {
+  const tokens = getResetTokens();
+  const resetToken = tokens.find(t => t.email === email && t.token === token);
+  
+  if (!resetToken) {
+    return false;
+  }
+  
+  // Check if token has expired
+  if (resetToken.expiry < Date.now()) {
+    // Remove expired token
+    const filteredTokens = tokens.filter(t => !(t.email === email && t.token === token));
+    saveResetTokens(filteredTokens);
+    return false;
+  }
+  
+  return true;
+};
+
+// Reset password with token
+export const resetPassword = (email: string, token: string, newPassword: string): boolean => {
+  // Validate the token first
+  if (!validateResetToken(email, token)) {
+    return false;
+  }
+  
+  // Update user's password
+  const users = getUsers();
+  const updatedUsers = users.map(user => {
+    if (user.email === email) {
+      return { ...user, password: newPassword };
+    }
+    return user;
+  });
+  
+  saveUsers(updatedUsers);
+  
+  // Remove the used token
+  const tokens = getResetTokens();
+  const filteredTokens = tokens.filter(t => !(t.email === email && t.token === token));
+  saveResetTokens(filteredTokens);
+  
+  return true;
 };

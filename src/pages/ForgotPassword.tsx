@@ -11,11 +11,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateResetToken } from '@/services/userService';
 
 // Define the validation schema
 const forgotPasswordSchema = z.object({
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: "Veuillez entrer une adresse email valide.",
   }),
 });
 
@@ -24,6 +25,7 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [resetCode, setResetCode] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -37,23 +39,27 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      // This is a mock password reset - in a real application, you would connect this to your backend
-      console.log("Reset password for:", values.email);
+      // Generate a reset token if the user exists
+      const token = generateResetToken(values.email);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setIsSubmitted(true);
       
+      // In a real application, we would send an email with the reset link
+      // For demo purposes, we'll display the token on screen if the user exists
+      setResetCode(token);
+      
       toast({
-        title: "Reset link sent",
-        description: "If an account exists with that email, you will receive a password reset link.",
+        title: "Lien de réinitialisation envoyé",
+        description: "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation de mot de passe.",
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Request failed",
-        description: "Something went wrong. Please try again.",
+        title: "Demande échouée",
+        description: "Une erreur s'est produite. Veuillez réessayer.",
       });
     } finally {
       setIsLoading(false);
@@ -70,8 +76,8 @@ const ForgotPassword = () => {
         className="container max-w-md mx-auto py-8"
       >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Reset Your Password</h1>
-          <p className="text-gray-400">We'll send you a link to reset your password</p>
+          <h1 className="text-3xl font-bold mb-2">Réinitialiser votre mot de passe</h1>
+          <p className="text-gray-400">Nous vous enverrons un lien pour réinitialiser votre mot de passe</p>
         </div>
 
         <div className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-xl p-6">
@@ -89,7 +95,7 @@ const ForgotPassword = () => {
                           <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                           <Input 
                             type="email" 
-                            placeholder="Enter your email" 
+                            placeholder="Entrez votre email" 
                             className="pl-10" 
                             disabled={isLoading}
                             {...field} 
@@ -102,7 +108,7 @@ const ForgotPassword = () => {
                 />
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Sending..." : "Send Reset Link"}
+                  {isLoading ? "Envoi en cours..." : "Envoyer le lien de réinitialisation"}
                 </Button>
               </form>
             </Form>
@@ -124,12 +130,23 @@ const ForgotPassword = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Check Your Email</h3>
+              <h3 className="text-xl font-semibold mb-2">Vérifiez votre email</h3>
               <p className="text-gray-400 mb-4">
-                We've sent a password reset link to your email address.
+                Nous avons envoyé un lien de réinitialisation de mot de passe à votre adresse email.
               </p>
+              
+              {resetCode && (
+                <div className="mb-4 p-3 bg-gray-800 rounded-md">
+                  <p className="text-sm text-gray-300 mb-1">Pour démonstration uniquement :</p>
+                  <p className="font-mono text-green-400 select-all break-all">{resetCode}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Dans une application réelle, ce code serait envoyé par email
+                  </p>
+                </div>
+              )}
+              
               <Button variant="outline" onClick={() => setIsSubmitted(false)}>
-                Try Another Email
+                Essayer avec un autre email
               </Button>
             </div>
           )}
@@ -137,7 +154,7 @@ const ForgotPassword = () => {
           <div className="mt-6 text-center">
             <Link to="/login" className="text-primary hover:underline inline-flex items-center gap-1">
               <ArrowLeft className="h-4 w-4" />
-              Back to Login
+              Retour à la connexion
             </Link>
           </div>
         </div>
