@@ -1,4 +1,3 @@
-
 // userService.ts
 interface User {
   email: string;
@@ -20,6 +19,7 @@ export interface Purchase {
 const USERS_KEY = 'users';
 const PURCHASES_KEY = 'user_purchases';
 const RESET_TOKENS_KEY = 'reset_tokens';
+const OTP_CODES_KEY = 'otp_codes';
 
 // Initialize users in localStorage if they don't exist
 if (!localStorage.getItem(USERS_KEY)) {
@@ -29,6 +29,11 @@ if (!localStorage.getItem(USERS_KEY)) {
 // Initialize purchases in localStorage if they don't exist
 if (!localStorage.getItem(PURCHASES_KEY)) {
   localStorage.setItem(PURCHASES_KEY, JSON.stringify({}));
+}
+
+// Initialize OTP codes in localStorage if they don't exist
+if (!localStorage.getItem(OTP_CODES_KEY)) {
+  localStorage.setItem(OTP_CODES_KEY, JSON.stringify({}));
 }
 
 // Function to add sample data (for testing purposes)
@@ -163,6 +168,103 @@ export const updatePurchase = (userEmail: string, purchaseId: string, updateData
     console.error('Error updating purchase:', error);
     return false;
   }
+};
+
+// OTP Reset Password functionality
+
+interface OTPCode {
+  email: string;
+  code: string;
+  expiry: number; // timestamp
+}
+
+// Get all OTP codes
+export const getOTPCodes = (): Record<string, OTPCode> => {
+  const codesJson = localStorage.getItem(OTP_CODES_KEY);
+  return codesJson ? JSON.parse(codesJson) : {};
+};
+
+// Save OTP codes
+const saveOTPCodes = (codes: Record<string, OTPCode>) => {
+  localStorage.setItem(OTP_CODES_KEY, JSON.stringify(codes));
+};
+
+// Generate a 6-digit OTP code
+export const generateOTPCode = (email: string): string | null => {
+  // Verify that the user exists
+  const users = getUsers();
+  const userExists = users.some(user => user.email === email);
+  
+  if (!userExists) {
+    // For security reasons, we should not inform the user that the email doesn't exist
+    // But we won't generate a code either
+    return null;
+  }
+  
+  // Generate a 6-digit code
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Set expiry to 10 minutes from now
+  const expiry = Date.now() + (10 * 60 * 1000);
+  
+  // Save the code
+  const otpCodes = getOTPCodes();
+  
+  // Add or update the code for this email
+  otpCodes[email] = { email, code, expiry };
+  
+  // Save codes back to localStorage
+  saveOTPCodes(otpCodes);
+  
+  return code;
+};
+
+// Validate OTP code
+export const validateOTPCode = (email: string, code: string): boolean => {
+  const otpCodes = getOTPCodes();
+  const userCode = otpCodes[email];
+  
+  if (!userCode) {
+    return false;
+  }
+  
+  // Check if code has expired
+  if (userCode.expiry < Date.now()) {
+    // Remove expired code
+    delete otpCodes[email];
+    saveOTPCodes(otpCodes);
+    return false;
+  }
+  
+  // Check if code matches
+  if (userCode.code !== code) {
+    return false;
+  }
+  
+  return true;
+};
+
+// Create a reset token after OTP verification
+export const createResetTokenAfterOTP = (email: string): string => {
+  // Generate a random token
+  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  
+  // Set expiry to 30 minutes from now
+  const expiry = Date.now() + (30 * 60 * 1000);
+  
+  // Save the token
+  const tokens = getResetTokens();
+  
+  // Remove any existing tokens for this email
+  const filteredTokens = tokens.filter(t => t.email !== email);
+  
+  // Add the new token
+  filteredTokens.push({ email, token, expiry });
+  
+  // Save tokens back to localStorage
+  saveResetTokens(filteredTokens);
+  
+  return token;
 };
 
 // Password reset functionality

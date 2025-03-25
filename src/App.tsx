@@ -10,6 +10,7 @@ import FreeMods from './pages/FreeMods';
 import PaidMods from './pages/PaidMods';
 import ComingSoon from './pages/ComingSoon';
 import ForgotPassword from './pages/ForgotPassword';
+import VerifyOTP from './pages/VerifyOTP';
 import ResetPassword from './pages/ResetPassword';
 import Admin from './pages/Admin';
 import Rules from './pages/Rules';
@@ -37,6 +38,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/free-mods" element={<FreeMods />} />
           <Route path="/paid-mods" element={<PaidMods />} />
