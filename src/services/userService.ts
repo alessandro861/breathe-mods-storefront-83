@@ -1,14 +1,33 @@
+
 // userService.ts
 interface User {
   email: string;
   password?: string;
+  username?: string;
+}
+
+// Purchase interface needed by other components
+export interface Purchase {
+  id: string;
+  productName: string;
+  date: string;
+  price: number;
+  serverName?: string;
+  serverIp?: string;
+  serverPort?: string;
 }
 
 const USERS_KEY = 'users';
+const PURCHASES_KEY = 'user_purchases';
 
 // Initialize users in localStorage if they don't exist
 if (!localStorage.getItem(USERS_KEY)) {
   localStorage.setItem(USERS_KEY, JSON.stringify([]));
+}
+
+// Initialize purchases in localStorage if they don't exist
+if (!localStorage.getItem(PURCHASES_KEY)) {
+  localStorage.setItem(PURCHASES_KEY, JSON.stringify({}));
 }
 
 // Function to add sample data (for testing purposes)
@@ -38,6 +57,23 @@ const saveUsers = (users: User[]) => {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 };
 
+// Function to save a new user (for signup)
+export const saveUser = (userData: User): boolean => {
+  const users = getUsers();
+  
+  // Check if user with this email already exists
+  const userExists = users.some(user => user.email === userData.email);
+  
+  if (userExists) {
+    return false; // User already exists
+  }
+  
+  // Add the new user
+  users.push(userData);
+  saveUsers(users);
+  return true;
+};
+
 // Function to validate login credentials
 export const validateLogin = (email: string, password?: string): boolean => {
   const users = getUsers();
@@ -58,6 +94,74 @@ export const getCurrentUser = (): string | null => {
 // Function to clear user session
 export const clearUserSession = () => {
   localStorage.removeItem('currentUser');
+};
+
+// PURCHASES FUNCTIONALITY
+
+// Function to get all purchases for a user
+export const getUserPurchases = (userEmail: string): Purchase[] => {
+  const purchasesJson = localStorage.getItem(PURCHASES_KEY);
+  const allPurchases = purchasesJson ? JSON.parse(purchasesJson) : {};
+  
+  // Return the user's purchases or an empty array if none exist
+  return allPurchases[userEmail] || [];
+};
+
+// Function to add a purchase for a user
+export const addPurchase = (userEmail: string, purchase: Purchase): boolean => {
+  try {
+    const purchasesJson = localStorage.getItem(PURCHASES_KEY);
+    const allPurchases = purchasesJson ? JSON.parse(purchasesJson) : {};
+    
+    // Initialize user's purchases array if it doesn't exist
+    if (!allPurchases[userEmail]) {
+      allPurchases[userEmail] = [];
+    }
+    
+    // Add the new purchase
+    allPurchases[userEmail].push(purchase);
+    
+    // Save back to localStorage
+    localStorage.setItem(PURCHASES_KEY, JSON.stringify(allPurchases));
+    return true;
+  } catch (error) {
+    console.error('Error adding purchase:', error);
+    return false;
+  }
+};
+
+// Function to update a purchase
+export const updatePurchase = (userEmail: string, purchaseId: string, updateData: Partial<Purchase>): boolean => {
+  try {
+    const purchasesJson = localStorage.getItem(PURCHASES_KEY);
+    const allPurchases = purchasesJson ? JSON.parse(purchasesJson) : {};
+    
+    // Check if user has purchases
+    if (!allPurchases[userEmail]) {
+      return false;
+    }
+    
+    // Find the purchase to update
+    const userPurchases = allPurchases[userEmail];
+    const purchaseIndex = userPurchases.findIndex((p: Purchase) => p.id === purchaseId);
+    
+    if (purchaseIndex === -1) {
+      return false; // Purchase not found
+    }
+    
+    // Update the purchase
+    allPurchases[userEmail][purchaseIndex] = {
+      ...allPurchases[userEmail][purchaseIndex],
+      ...updateData
+    };
+    
+    // Save back to localStorage
+    localStorage.setItem(PURCHASES_KEY, JSON.stringify(allPurchases));
+    return true;
+  } catch (error) {
+    console.error('Error updating purchase:', error);
+    return false;
+  }
 };
 
 // Password reset functionality
