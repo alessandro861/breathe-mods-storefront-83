@@ -19,6 +19,7 @@ export interface Purchase {
 
 const USERS_KEY = 'users';
 const PURCHASES_KEY = 'user_purchases';
+const RESET_TOKENS_KEY = 'reset_tokens';
 
 // Initialize users in localStorage if they don't exist
 if (!localStorage.getItem(USERS_KEY)) {
@@ -165,7 +166,6 @@ export const updatePurchase = (userEmail: string, purchaseId: string, updateData
 };
 
 // Password reset functionality
-const RESET_TOKENS_KEY = 'reset_tokens';
 
 interface ResetToken {
   email: string;
