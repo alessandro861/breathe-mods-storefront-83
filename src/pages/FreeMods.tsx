@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -12,7 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DiscordSettings from '@/components/mods/DiscordSettings';
 import PurchaseDialog from '@/components/mods/PurchaseDialog';
 import { Link } from 'react-router-dom';
+import ModFilters, { ModTag, SortOption } from '@/components/mods/ModFilters';
 
+// Dates pour les mods initiaux
 const initialFreeMods = [
   {
     id: 1,
@@ -21,7 +24,9 @@ const initialFreeMods = [
     description: "Enhanced medical system inspired by Escape from Tarkov. Adds realistic medical items and healing mechanics to DayZ.",
     url: "https://steamcommunity.com/sharedfiles/filedetails/?id=3399774519&searchtext=Tarkov+medicine",
     repackPrice: "10€",
-    isPaid: false
+    isPaid: false,
+    tags: ["medic", "UI"] as ModTag[],
+    date: "2024-01-15"
   },
   {
     id: 2,
@@ -30,7 +35,9 @@ const initialFreeMods = [
     description: "Improved helicopter crash sites with enhanced loot, visual effects, and more frequent spawns for an exciting gameplay experience.",
     url: "https://steamcommunity.com/sharedfiles/filedetails/?id=3404088257&searchtext=Helicrash",
     repackPrice: "10€",
-    isPaid: false
+    isPaid: false,
+    tags: ["reward", "gear"] as ModTag[],
+    date: "2024-02-20"
   }
 ];
 
@@ -41,8 +48,10 @@ const initialPaidMods = [
     image: "/lovable-uploads/efd47a0f-a1d2-4ba9-9247-4980de10939d.png",
     description: "Engage in intense capture the flag battles at the airfield. Features team-based gameplay, custom flags, and special capture points.",
     url: "https://www.youtube.com/watch?v=z8jlj59gg2Y",
-    repackPrice: "Basic Price 45€<br/>Buying EMP with Capture Flag Price 65€",
-    isPaid: true
+    repackPrice: "45€",
+    isPaid: true,
+    tags: ["reward", "gear", "weapon"] as ModTag[],
+    date: "2024-03-05"
   }
 ];
 
@@ -55,6 +64,12 @@ const FreeMods = () => {
   const [discordSettingsOpen, setDiscordSettingsOpen] = useState(false);
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [selectedMod, setSelectedMod] = useState<Mod | null>(null);
+  
+  // Filtres et tri
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<ModTag[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [sortOption, setSortOption] = useState<SortOption>("name");
   
   const [freeMods, setFreeMods] = useState<Mod[]>(() => {
     const savedMods = localStorage.getItem('breathe-free-mods');
@@ -160,6 +175,65 @@ const FreeMods = () => {
     setPurchaseDialogOpen(true);
   };
 
+  // Filtrage et tri des mods
+  const getFilteredMods = (mods: Mod[]) => {
+    return mods
+      .filter(mod => {
+        // Filtrage par recherche
+        const matchesSearch = mod.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              mod.description.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        // Filtrage par tags
+        const matchesTags = selectedTags.length === 0 || 
+                           (mod.tags && selectedTags.every(tag => mod.tags?.includes(tag)));
+        
+        // Filtrage par prix
+        const priceNumber = extractPriceNumber(mod.repackPrice);
+        const matchesPrice = priceNumber >= priceRange[0] && priceNumber <= priceRange[1];
+        
+        return matchesSearch && matchesTags && matchesPrice;
+      })
+      .sort((a, b) => {
+        // Tri
+        switch (sortOption) {
+          case 'name':
+            return a.title.localeCompare(b.title);
+          case 'price-high':
+            return extractPriceNumber(b.repackPrice) - extractPriceNumber(a.repackPrice);
+          case 'price-low':
+            return extractPriceNumber(a.repackPrice) - extractPriceNumber(b.repackPrice);
+          case 'date':
+            return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+          default:
+            return 0;
+        }
+      });
+  };
+  
+  // Fonction pour extraire le prix numérique
+  const extractPriceNumber = (priceString: string): number => {
+    const match = priceString.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  // Calculer le prix minimum et maximum pour les sliders
+  const minMaxPrice = React.useMemo(() => {
+    const allMods = [...freeMods, ...paidMods];
+    let min = 100, max = 0;
+    
+    allMods.forEach(mod => {
+      const price = extractPriceNumber(mod.repackPrice);
+      min = Math.min(min, price);
+      max = Math.max(max, price);
+    });
+    
+    return { min, max };
+  }, [freeMods, paidMods]);
+
+  // Filtrer les mods en fonction des critères
+  const filteredFreeMods = getFilteredMods(freeMods);
+  const filteredPaidMods = getFilteredMods(paidMods);
+
   return (
     <Layout>
       <motion.div
@@ -240,6 +314,19 @@ const FreeMods = () => {
           />
         )}
 
+        <ModFilters
+          minPrice={minMaxPrice.min}
+          maxPrice={minMaxPrice.max}
+          priceRange={priceRange}
+          selectedTags={selectedTags}
+          selectedSort={sortOption}
+          searchTerm={searchTerm}
+          onPriceRangeChange={setPriceRange}
+          onTagsChange={setSelectedTags}
+          onSearchChange={setSearchTerm}
+          onSortChange={setSortOption}
+        />
+
         <Tabs defaultValue="free" value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="free">Free Mods</TabsTrigger>
@@ -248,7 +335,7 @@ const FreeMods = () => {
           
           <TabsContent value="free" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {freeMods.map((mod) => (
+              {filteredFreeMods.map((mod) => (
                 <ModCard
                   key={mod.id}
                   mod={mod}
@@ -259,7 +346,7 @@ const FreeMods = () => {
                 />
               ))}
               
-              {freeMods.length === 0 && (
+              {filteredFreeMods.length === 0 && (
                 <div className="col-span-2 text-center py-10">
                   <p className="text-gray-400">No free mods available at the moment.</p>
                 </div>
@@ -269,7 +356,7 @@ const FreeMods = () => {
           
           <TabsContent value="paid" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {paidMods.map((mod) => (
+              {filteredPaidMods.map((mod) => (
                 <ModCard
                   key={mod.id}
                   mod={mod}
@@ -280,7 +367,7 @@ const FreeMods = () => {
                 />
               ))}
               
-              {paidMods.length === 0 && (
+              {filteredPaidMods.length === 0 && (
                 <div className="col-span-2 text-center py-10">
                   <p className="text-gray-400">No paid mods available at the moment.</p>
                 </div>

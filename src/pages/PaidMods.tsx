@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -10,6 +11,7 @@ import ModCard, { Mod } from '@/components/mods/ModCard';
 import ModForm from '@/components/mods/ModForm';
 import PurchaseDialog from '@/components/mods/PurchaseDialog';
 import { Link } from 'react-router-dom';
+import ModFilters, { ModTag, SortOption } from '@/components/mods/ModFilters';
 
 const initialPaidMods = [
   {
@@ -18,8 +20,10 @@ const initialPaidMods = [
     image: "/lovable-uploads/efd47a0f-a1d2-4ba9-9247-4980de10939d.png",
     description: "Engage in intense capture the flag battles at the airfield. Features team-based gameplay, custom flags, and special capture points.",
     url: "https://www.youtube.com/watch?v=z8jlj59gg2Y",
-    repackPrice: "15€",
-    isPaid: true
+    repackPrice: "45€",
+    isPaid: true,
+    tags: ["reward", "gear", "weapon"] as ModTag[],
+    date: "2024-03-05"
   }
 ];
 
@@ -30,6 +34,12 @@ const PaidMods = () => {
   const [currentMod, setCurrentMod] = useState<Mod | null>(null);
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [selectedMod, setSelectedMod] = useState<Mod | null>(null);
+  
+  // Filtres et tri
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<ModTag[]>([]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
+  const [sortOption, setSortOption] = useState<SortOption>("name");
   
   const [paidMods, setPaidMods] = useState<Mod[]>(() => {
     const savedMods = localStorage.getItem('breathe-paid-mods');
@@ -101,6 +111,58 @@ const PaidMods = () => {
     setPurchaseDialogOpen(true);
   };
 
+  // Fonction pour extraire le prix numérique
+  const extractPriceNumber = (priceString: string): number => {
+    const match = priceString.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
+  // Calculer le prix minimum et maximum pour les sliders
+  const minMaxPrice = React.useMemo(() => {
+    let min = 100, max = 0;
+    
+    paidMods.forEach(mod => {
+      const price = extractPriceNumber(mod.repackPrice);
+      min = Math.min(min, price);
+      max = Math.max(max, price);
+    });
+    
+    return { min, max: Math.max(max, 100) };
+  }, [paidMods]);
+
+  // Filtrage et tri des mods
+  const filteredMods = paidMods
+    .filter(mod => {
+      // Filtrage par recherche
+      const matchesSearch = mod.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           mod.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filtrage par tags
+      const matchesTags = selectedTags.length === 0 || 
+                         (mod.tags && selectedTags.every(tag => mod.tags?.includes(tag)));
+      
+      // Filtrage par prix
+      const priceNumber = extractPriceNumber(mod.repackPrice);
+      const matchesPrice = priceNumber >= priceRange[0] && priceNumber <= priceRange[1];
+      
+      return matchesSearch && matchesTags && matchesPrice;
+    })
+    .sort((a, b) => {
+      // Tri
+      switch (sortOption) {
+        case 'name':
+          return a.title.localeCompare(b.title);
+        case 'price-high':
+          return extractPriceNumber(b.repackPrice) - extractPriceNumber(a.repackPrice);
+        case 'price-low':
+          return extractPriceNumber(a.repackPrice) - extractPriceNumber(b.repackPrice);
+        case 'date':
+          return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
+        default:
+          return 0;
+      }
+    });
+
   return (
     <Layout>
       <motion.div
@@ -164,8 +226,21 @@ const PaidMods = () => {
           />
         )}
 
+        <ModFilters
+          minPrice={minMaxPrice.min}
+          maxPrice={minMaxPrice.max}
+          priceRange={priceRange}
+          selectedTags={selectedTags}
+          selectedSort={sortOption}
+          searchTerm={searchTerm}
+          onPriceRangeChange={setPriceRange}
+          onTagsChange={setSelectedTags}
+          onSearchChange={setSearchTerm}
+          onSortChange={setSortOption}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {paidMods.map((mod) => (
+          {filteredMods.map((mod) => (
             <ModCard
               key={mod.id}
               mod={mod}
@@ -176,7 +251,7 @@ const PaidMods = () => {
             />
           ))}
           
-          {paidMods.length === 0 && (
+          {filteredMods.length === 0 && (
             <div className="col-span-2 text-center py-10">
               <p className="text-gray-400">No paid mods available at the moment.</p>
             </div>

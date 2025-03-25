@@ -1,118 +1,235 @@
 
 import React, { useState } from 'react';
-import { Save } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import ImageUpload from '@/components/ImageUpload';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import ImageUpload from '@/components/ImageUpload';
-import { Mod } from './ModCard';
+import { ModTag } from './ModFilters';
+import {
+  ToggleGroup,
+  ToggleGroupItem
+} from '@/components/ui/toggle-group';
+
+const formSchema = z.object({
+  title: z.string().min(3, {
+    message: 'Le titre doit contenir au moins 3 caractères',
+  }),
+  description: z.string().min(10, {
+    message: 'La description doit contenir au moins 10 caractères',
+  }),
+  url: z.string().url({
+    message: 'Veuillez entrer une URL valide',
+  }),
+  repackPrice: z.string().optional(),
+  image: z.string().optional(),
+  isPaid: z.boolean().default(false),
+  date: z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema> & {
+  tags?: ModTag[];
+};
 
 interface ModFormProps {
-  mod?: Partial<Mod>;
-  onSubmit: (mod: Omit<Mod, 'id'>) => void;
+  mod?: any;
+  onSubmit: (data: FormData) => void;
   onCancel: () => void;
   isPaidOnly?: boolean;
 }
 
-const ModForm: React.FC<ModFormProps> = ({ 
-  mod, 
-  onSubmit, 
-  onCancel,
-  isPaidOnly = false
-}) => {
-  const [title, setTitle] = useState(mod?.title || '');
-  const [image, setImage] = useState(mod?.image || '');
-  const [description, setDescription] = useState(mod?.description || '');
-  const [url, setUrl] = useState(mod?.url || '');
-  const [repackPrice, setRepackPrice] = useState(mod?.repackPrice || '');
-  const [isPaid, setIsPaid] = useState(isPaidOnly || mod?.isPaid || false);
+const ModForm = ({ mod, onSubmit, onCancel, isPaidOnly = false }: ModFormProps) => {
+  const [selectedTags, setSelectedTags] = useState<ModTag[]>(mod?.tags || []);
+  const [imageUrl, setImageUrl] = useState<string>(mod?.image || '');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      title,
-      image,
-      description,
-      url,
-      repackPrice,
-      isPaid: isPaidOnly ? true : isPaid
-    });
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: mod?.title || '',
+      description: mod?.description || '',
+      url: mod?.url || '',
+      repackPrice: mod?.repackPrice || '',
+      image: mod?.image || '',
+      isPaid: isPaidOnly ? true : mod?.isPaid || false,
+      date: mod?.date || new Date().toISOString().split('T')[0],
+    },
+  });
+
+  const handleSubmit = (data: FormData) => {
+    const finalData = {
+      ...data,
+      image: imageUrl,
+      tags: selectedTags,
+    };
+    onSubmit(finalData);
+  };
+
+  const handleTagToggle = (tags: string[]) => {
+    setSelectedTags(tags as ModTag[]);
+  };
+
+  const handleImageUpload = (url: string) => {
+    setImageUrl(url);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="title" className="text-sm font-medium">Mod Title</label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter mod title"
-          required
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Titre</FormLabel>
+              <FormControl>
+                <Input placeholder="Titre du mod" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Mod Image</label>
-        <ImageUpload currentImage={image} onImageChange={setImage} />
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="description" className="text-sm font-medium">Description</label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter mod description"
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="url" className="text-sm font-medium">URL</label>
-        <Input
-          id="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder={isPaid ? "Enter YouTube or video URL" : "Enter Steam workshop URL"}
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="repackPrice" className="text-sm font-medium">Repack Price</label>
-        <Input
-          id="repackPrice"
-          value={repackPrice}
-          onChange={(e) => setRepackPrice(e.target.value)}
-          placeholder="e.g. 10€"
-          required
-        />
-      </div>
-      
-      {!isPaidOnly && (
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="isPaid" 
-            checked={isPaid}
-            onCheckedChange={setIsPaid}
-          />
-          <Label htmlFor="isPaid">Paid Mod</Label>
+        
+        <div className="mb-4">
+          <FormLabel>Image</FormLabel>
+          <div className="mt-1">
+            <ImageUpload
+              imageUrl={imageUrl}
+              onImageUpload={handleImageUpload}
+              className="w-full h-48 rounded-md"
+            />
+          </div>
         </div>
-      )}
-      
-      <div className="flex space-x-2 pt-2">
-        <Button type="submit" className="flex-1">
-          <Save className="w-4 h-4 mr-2" />
-          Save Mod
-        </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-      </div>
-    </form>
+
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Description du mod"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="https://steamcommunity.com/..."
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date</FormLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div>
+          <FormLabel className="mb-2 block">Tags</FormLabel>
+          <ToggleGroup 
+            type="multiple" 
+            className="flex flex-wrap gap-2"
+            value={selectedTags}
+            onValueChange={handleTagToggle}
+          >
+            <ToggleGroupItem value="weapon">Armes</ToggleGroupItem>
+            <ToggleGroupItem value="medic">Médical</ToggleGroupItem>
+            <ToggleGroupItem value="reward">Récompenses</ToggleGroupItem>
+            <ToggleGroupItem value="UI">Interface</ToggleGroupItem>
+            <ToggleGroupItem value="vehicles">Véhicules</ToggleGroupItem>
+            <ToggleGroupItem value="gear">Équipement</ToggleGroupItem>
+            <ToggleGroupItem value="storage">Stockage</ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
+        {!isPaidOnly && (
+          <FormField
+            control={form.control}
+            name="isPaid"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center gap-2">
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Payant</FormLabel>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="repackPrice"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Prix (€)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="10€" 
+                  {...field} 
+                  disabled={!isPaidOnly && !form.watch('isPaid')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+          <Button type="submit">
+            {mod ? 'Mettre à jour' : 'Ajouter'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 
