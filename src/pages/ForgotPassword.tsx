@@ -12,6 +12,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { Mail, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateResetToken } from '@/services/userService';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Define the validation schema
 const forgotPasswordSchema = z.object({
@@ -26,6 +27,8 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [resetCode, setResetCode] = useState<string | null>(null);
+  const [showResetLink, setShowResetLink] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const { toast } = useToast();
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -47,9 +50,12 @@ const ForgotPassword = () => {
       
       setIsSubmitted(true);
       
-      // In a real application, we would send an email with the reset link
-      // For demo purposes, we'll display the token on screen if the user exists
-      setResetCode(token);
+      // For demo purposes, we'll create a reset link that can be used
+      if (token) {
+        setResetCode(token);
+        setResetEmail(values.email);
+        setShowResetLink(true);
+      }
       
       toast({
         title: "Lien de réinitialisation envoyé",
@@ -65,6 +71,13 @@ const ForgotPassword = () => {
       setIsLoading(false);
     }
   }
+
+  // Create a reset link for demo purposes
+  const getResetLink = () => {
+    if (!resetCode || !resetEmail) return "";
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/reset-password?email=${encodeURIComponent(resetEmail)}&token=${resetCode}`;
+  };
 
   return (
     <Layout>
@@ -142,6 +155,14 @@ const ForgotPassword = () => {
                   <p className="text-xs text-gray-400 mt-1">
                     Dans une application réelle, ce code serait envoyé par email
                   </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-2" 
+                    onClick={() => setShowResetLink(true)}
+                  >
+                    Voir le lien de réinitialisation
+                  </Button>
                 </div>
               )}
               
@@ -159,6 +180,34 @@ const ForgotPassword = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Dialog to show reset link for demonstration */}
+      <Dialog open={showResetLink} onOpenChange={setShowResetLink}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Lien de réinitialisation</DialogTitle>
+            <DialogDescription>
+              Dans une application réelle, ce lien serait envoyé par email. Pour tester, cliquez sur le lien ci-dessous:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-3 bg-gray-800 rounded-md mt-4">
+            <a 
+              href={getResetLink()} 
+              className="font-mono text-primary text-sm break-all hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {getResetLink()}
+            </a>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Cliquez sur le lien ou copiez-le dans votre navigateur pour continuer.
+          </p>
+          <div className="flex justify-end mt-4">
+            <Button onClick={() => setShowResetLink(false)}>Fermer</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
