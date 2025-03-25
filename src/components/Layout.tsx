@@ -79,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="absolute -inset-1 bg-gradient-to-r from-primary/50 to-primary/30 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
                   <div className="relative bg-background/40 backdrop-blur-sm p-2 rounded-xl flex items-center border border-white/10 shadow-lg hover:shadow-primary/20 transition duration-300">
                     <img 
-                      src="/lovable-uploads/78c9ee5d-bf68-4af2-9b44-a035c2bde3da.png" 
+                      src="/lovable-uploads/4442a23d-2867-49ed-adc3-0e5cfed77c21.png" 
                       alt="Breathe Mods Logo" 
                       className="h-12 w-12 mr-3 filter drop-shadow-md"
                     />
