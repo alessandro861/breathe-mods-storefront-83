@@ -5,13 +5,18 @@ import { UploadCloud, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploadProps {
-  currentImage: string;
-  onImageChange: (newImageUrl: string) => void;
+  imageUrl?: string;
+  onImageUpload: (newImageUrl: string) => void;
+  className?: string;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ currentImage, onImageChange }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ 
+  imageUrl = '', 
+  onImageUpload,
+  className = ''
+}) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -45,7 +50,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ currentImage, onImageChange }
       setIsUploading(false);
       // In a real implementation, onImageChange would receive a URL from your server
       // For now, we'll just use the preview URL
-      onImageChange(reader.result as string);
+      onImageUpload(reader.result as string);
       
       toast({
         title: "Image uploaded",
@@ -59,7 +64,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ currentImage, onImageChange }
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       <div 
         className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors"
         onClick={triggerFileInput}
