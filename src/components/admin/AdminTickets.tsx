@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, MessageSquare, UserX, CheckCircle2 } from 'lucide-react';
+import { Search, MessageSquare, UserX, CheckCircle2, AlertCircle, AlertTriangle, AlertOctagon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -21,13 +22,22 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import TicketChat from '../tickets/TicketChat';
+import { TicketPriority } from '../tickets/TicketChat';
 
 // Mock data interface for tickets
 export interface AdminTicket {
   id: number;
   title: string;
   status: 'open' | 'pending' | 'closed';
+  priority: TicketPriority;
   createdAt: string;
   lastUpdated: string;
   userEmail: string;
@@ -58,10 +68,11 @@ export const AdminTickets = () => {
         const ticketsString = localStorage.getItem('breathe-tickets');
         if (ticketsString) {
           const tickets = JSON.parse(ticketsString);
-          // Ensure all tickets have a valid status
+          // Ensure all tickets have valid status and priority
           const validatedTickets = tickets.map((ticket: any) => ({
             ...ticket,
-            status: ['open', 'pending', 'closed'].includes(ticket.status) ? ticket.status : 'open' as const
+            status: ['open', 'pending', 'closed'].includes(ticket.status) ? ticket.status : 'open' as const,
+            priority: ['low', 'normal', 'high'].includes(ticket.priority) ? ticket.priority : 'normal' as TicketPriority
           }));
           setAllTickets(validatedTickets as AdminTicket[]);
         }
@@ -98,6 +109,34 @@ export const AdminTickets = () => {
     }
   };
 
+  const getPriorityBadge = (priority: TicketPriority) => {
+    switch(priority) {
+      case 'low':
+        return (
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 flex items-center gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Low
+          </Badge>
+        );
+      case 'normal':
+        return (
+          <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Normal
+          </Badge>
+        );
+      case 'high':
+        return (
+          <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 flex items-center gap-1">
+            <AlertOctagon className="h-3 w-3" />
+            High
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   const openTicketChat = (ticket: AdminTicket) => {
     setSelectedTicket(ticket);
     setIsChatOpen(true);
@@ -129,6 +168,37 @@ export const AdminTickets = () => {
       setSelectedTicket({
         ...selectedTicket,
         status: newStatus,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      });
+    }
+  };
+
+  const updateTicketPriority = (ticketId: number, newPriority: TicketPriority) => {
+    const updatedTickets = allTickets.map(ticket => {
+      if (ticket.id === ticketId) {
+        return {
+          ...ticket,
+          priority: newPriority,
+          lastUpdated: new Date().toISOString().split('T')[0]
+        };
+      }
+      return ticket;
+    });
+    
+    setAllTickets(updatedTickets);
+    localStorage.setItem('breathe-tickets', JSON.stringify(updatedTickets));
+    
+    const priorityText = newPriority.charAt(0).toUpperCase() + newPriority.slice(1);
+    toast({
+      title: `Ticket Priority Updated`,
+      description: `Ticket #${ticketId} priority set to ${priorityText}`,
+    });
+    
+    // If the current ticket is open in the chat, update it
+    if (selectedTicket && selectedTicket.id === ticketId) {
+      setSelectedTicket({
+        ...selectedTicket,
+        priority: newPriority,
         lastUpdated: new Date().toISOString().split('T')[0]
       });
     }
@@ -201,6 +271,7 @@ export const AdminTickets = () => {
                 <TableHead>Title</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Priority</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Updated</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -213,6 +284,7 @@ export const AdminTickets = () => {
                   <TableCell>{ticket.title}</TableCell>
                   <TableCell>{ticket.userEmail}</TableCell>
                   <TableCell>{getStatusBadge(ticket.status)}</TableCell>
+                  <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
                   <TableCell>{ticket.createdAt}</TableCell>
                   <TableCell>{ticket.lastUpdated}</TableCell>
                   <TableCell className="text-right">
@@ -302,19 +374,41 @@ export const AdminTickets = () => {
               Ticket #{selectedTicket?.id}: {selectedTicket?.title}
             </DialogTitle>
             <DialogDescription>
-              {getStatusBadge(selectedTicket?.status || 'open')} 
-              <span className="ml-2 text-gray-300 text-sm">
-                From: {selectedTicket?.userEmail}
-              </span>
+              <div className="flex items-center gap-2 mb-2">
+                {getStatusBadge(selectedTicket?.status || 'open')} 
+                {getPriorityBadge(selectedTicket?.priority || 'normal')}
+                <span className="text-gray-300 text-sm">
+                  From: {selectedTicket?.userEmail}
+                </span>
+              </div>
             </DialogDescription>
           </DialogHeader>
           
           {selectedTicket && (
-            <TicketChat
-              messages={selectedTicket.messages}
-              onSendMessage={handleSendMessage}
-              isTicketClosed={selectedTicket.status === 'closed'}
-            />
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm text-gray-400">Priority:</span>
+                <Select 
+                  defaultValue={selectedTicket.priority} 
+                  onValueChange={(value) => updateTicketPriority(selectedTicket.id, value as TicketPriority)}
+                >
+                  <SelectTrigger className="w-[140px] h-8">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <TicketChat
+                messages={selectedTicket.messages}
+                onSendMessage={handleSendMessage}
+                isTicketClosed={selectedTicket.status === 'closed'}
+              />
+            </>
           )}
 
           <div className="flex justify-between mt-4 pt-4 border-t border-gray-700">

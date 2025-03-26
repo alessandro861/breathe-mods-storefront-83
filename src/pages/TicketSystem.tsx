@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -9,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
-import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX, Settings } from 'lucide-react';
+import { Ticket, TicketPlus, MessageSquare, Clock, CheckCircle2, TicketX, Settings, AlertCircle, AlertTriangle, AlertOctagon } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sendDiscordWebhook } from '@/utils/discordIntegration';
 import DiscordSettings from '@/components/mods/DiscordSettings';
@@ -21,14 +22,27 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from '@/components/ui/badge';
 import { getCurrentUser } from '@/services/userService';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useNavigate } from 'react-router-dom';
+import { TicketPriority } from '@/components/tickets/TicketChat';
 
 const ticketSchema = z.object({
   title: z.string().min(5, { message: "Title must be at least 5 characters" }),
   description: z.string().min(20, { message: "Description must be at least 20 characters" }),
-  contactInfo: z.string().email({ message: "Please enter a valid email address" })
+  contactInfo: z.string().email({ message: "Please enter a valid email address" }),
+  priority: z.enum(["low", "normal", "high"], {
+    required_error: "Please select a priority level",
+  }),
 });
 
 type TicketFormValues = z.infer<typeof ticketSchema>;
@@ -37,6 +51,7 @@ interface Ticket {
   id: number;
   title: string;
   status: 'open' | 'pending' | 'closed';
+  priority: TicketPriority;
   createdAt: string;
   lastUpdated: string;
   userEmail: string;
@@ -68,7 +83,8 @@ const TicketSystem = () => {
     defaultValues: {
       title: "",
       description: "",
-      contactInfo: currentUser || ""
+      contactInfo: currentUser || "",
+      priority: "normal",
     }
   });
 
@@ -81,10 +97,15 @@ const TicketSystem = () => {
     const ticketsString = localStorage.getItem('breathe-tickets');
     if (ticketsString) {
       const tickets = JSON.parse(ticketsString) as Ticket[];
-      setAllTickets(tickets);
+      // Set default priority if not present
+      const updatedTickets = tickets.map(ticket => ({
+        ...ticket,
+        priority: ticket.priority || "normal" as TicketPriority
+      }));
+      setAllTickets(updatedTickets);
       
       if (currentUser) {
-        const userFilteredTickets = tickets.filter(ticket => ticket.userEmail === currentUser);
+        const userFilteredTickets = updatedTickets.filter(ticket => ticket.userEmail === currentUser);
         setUserTickets(userFilteredTickets);
       }
     }
@@ -104,6 +125,7 @@ const TicketSystem = () => {
       id: allTickets.length > 0 ? Math.max(...allTickets.map(t => t.id)) + 1 : 1,
       title: data.title,
       status: "open",
+      priority: data.priority,
       createdAt: new Date().toISOString().split('T')[0],
       lastUpdated: new Date().toISOString().split('T')[0],
       userEmail: currentUser,
@@ -135,12 +157,12 @@ const TicketSystem = () => {
     if (discordWebhookUrl) {
       try {
         const ticketNotification = {
-          content: "🎫 **New Support Ticket Created**",
+          content: `🎫 **New Support Ticket Created** (Priority: ${data.priority.toUpperCase()})`,
           embeds: [
             {
               title: data.title,
               description: data.description,
-              color: 3447003,
+              color: data.priority === "high" ? 16711680 : data.priority === "normal" ? 16750848 : 255,
               fields: [
                 {
                   name: "Contact",
@@ -150,6 +172,11 @@ const TicketSystem = () => {
                 {
                   name: "Created At",
                   value: new Date().toLocaleString(),
+                  inline: true
+                },
+                {
+                  name: "Priority",
+                  value: data.priority.toUpperCase(),
                   inline: true
                 }
               ],
@@ -180,7 +207,8 @@ const TicketSystem = () => {
     form.reset({
       title: "",
       description: "",
-      contactInfo: currentUser || ""
+      contactInfo: currentUser || "",
+      priority: "normal"
     });
   };
 
@@ -192,6 +220,34 @@ const TicketSystem = () => {
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Pending</span>;
       case 'closed':
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">Closed</span>;
+      default:
+        return null;
+    }
+  };
+
+  const getPriorityBadge = (priority: TicketPriority) => {
+    switch(priority) {
+      case 'low':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 flex gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Low
+          </span>
+        );
+      case 'normal':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Normal
+          </span>
+        );
+      case 'high':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 flex gap-1">
+            <AlertOctagon className="h-3 w-3" />
+            High
+          </span>
+        );
       default:
         return null;
     }
@@ -335,6 +391,55 @@ const TicketSystem = () => {
                     
                     <FormField
                       control={form.control}
+                      name="priority"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Ticket Priority</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1 sm:flex-row sm:space-x-6 sm:space-y-0"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="low" />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer flex items-center gap-1">
+                                  <AlertCircle className="h-4 w-4 text-blue-500" />
+                                  Low
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="normal" />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer flex items-center gap-1">
+                                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                  Normal
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value="high" />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer flex items-center gap-1">
+                                  <AlertOctagon className="h-4 w-4 text-red-500" />
+                                  High
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormDescription>
+                            Select the priority level for your request
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
                       name="contactInfo"
                       render={({ field }) => (
                         <FormItem>
@@ -403,6 +508,7 @@ const TicketSystem = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">ID</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Priority</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Updated</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
@@ -414,6 +520,7 @@ const TicketSystem = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">#{ticket.id}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">{ticket.title}</td>
                           <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(ticket.status)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">{getPriorityBadge(ticket.priority || 'normal')}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{ticket.createdAt}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{ticket.lastUpdated}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
@@ -454,10 +561,13 @@ const TicketSystem = () => {
               Ticket #{selectedTicket?.id}: {selectedTicket?.title}
             </DialogTitle>
             <DialogDescription>
-              {getStatusBadge(selectedTicket?.status || 'open')} 
-              <span className="ml-2 text-gray-300 text-sm">
-                Created on {selectedTicket?.createdAt}
-              </span>
+              <div className="flex flex-wrap gap-2 items-center">
+                {getStatusBadge(selectedTicket?.status || 'open')} 
+                {getPriorityBadge(selectedTicket?.priority || 'normal')}
+                <span className="text-gray-300 text-sm">
+                  Created on {selectedTicket?.createdAt}
+                </span>
+              </div>
             </DialogDescription>
           </DialogHeader>
           

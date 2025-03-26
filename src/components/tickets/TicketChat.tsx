@@ -11,6 +11,8 @@ export interface TicketMessage {
   timestamp: string;
 }
 
+export type TicketPriority = "low" | "normal" | "high";
+
 interface TicketChatProps {
   messages: TicketMessage[];
   onSendMessage: (message: string) => void;
