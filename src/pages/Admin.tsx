@@ -7,9 +7,10 @@ import { UserList } from '@/components/admin/UserList';
 import { PurchaseHistory } from '@/components/admin/PurchaseHistory';
 import { AdminTickets } from '@/components/admin/AdminTickets';
 import WebhookSettings from '@/components/admin/WebhookSettings';
+import { DiscountManager } from '@/components/admin/DiscountManager';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Ticket, BellRing } from 'lucide-react';
+import { ShieldAlert, Ticket, BellRing, BadgePercent } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -75,6 +76,10 @@ const AdminPage = () => {
             <TabsList className="mb-6 bg-background/50 backdrop-blur-sm border border-white/10">
               <TabsTrigger value="manage-accounts">Manage Accounts</TabsTrigger>
               <TabsTrigger value="purchases">Purchase History</TabsTrigger>
+              <TabsTrigger value="discount-codes" className="flex items-center gap-1">
+                <BadgePercent className="h-4 w-4" />
+                Discount Codes
+              </TabsTrigger>
               <TabsTrigger value="tickets" className="flex items-center gap-1">
                 <Ticket className="h-4 w-4" />
                 Support Tickets
@@ -91,6 +96,10 @@ const AdminPage = () => {
             
             <TabsContent value="purchases" className="space-y-4">
               <PurchaseHistory />
+            </TabsContent>
+            
+            <TabsContent value="discount-codes" className="space-y-4">
+              <DiscountManager />
             </TabsContent>
             
             <TabsContent value="tickets" className="space-y-4">
