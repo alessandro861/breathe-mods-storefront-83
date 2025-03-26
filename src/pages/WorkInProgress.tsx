@@ -83,7 +83,10 @@ const FurnitureModForm = ({
       
       <div className="space-y-2">
         <label className="text-sm font-medium">Furniture Image</label>
-        <ImageUpload currentImage={image} onImageChange={setImage} />
+        <ImageUpload 
+          imageUrl={image} 
+          onImageUpload={setImage} 
+        />
       </div>
       
       <div className="space-y-2">
