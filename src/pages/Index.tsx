@@ -16,7 +16,7 @@ const Index: React.FC = () => {
   
   return (
     <Layout>
-      <div className="container mx-auto flex flex-col items-center justify-center space-y-8 md:space-y-20 px-4 md:px-0">
+      <div className="container mx-auto flex flex-col items-center justify-center space-y-8 md:space-y-16 px-4 md:px-0">
         {/* Hero Section */}
         <HeroSection />
         
@@ -32,9 +32,9 @@ const Index: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.5 }}
-              className="flex flex-col w-full md:flex-row md:flex-wrap md:gap-4 md:justify-center"
+              className="flex flex-col w-full md:flex-row md:flex-wrap md:gap-4 md:justify-center gap-3"
             >
-              <Link to="/free-mods" className="w-full md:w-auto mb-3 md:mb-0">
+              <Link to="/free-mods" className="w-full md:w-auto">
                 <Button size="lg" className="text-md group w-full md:w-auto">
                   <Download className="mr-2 h-5 w-5 group-hover:animate-pulse" />
                   Get Mods
@@ -45,7 +45,7 @@ const Index: React.FC = () => {
                 href="https://discord.gg/Yr8aY3fW4f" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-full md:w-auto mb-3 md:mb-0"
+                className="w-full md:w-auto"
               >
                 <Button size="lg" variant="outline" className="text-md w-full md:w-auto">
                   <Ticket className="mr-2 h-5 w-5" />
@@ -65,12 +65,12 @@ const Index: React.FC = () => {
         </section>
 
         {/* Features Section */}
-        <section className="w-full">
+        <section className="w-full mt-4 md:mt-0">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.7 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto"
+            className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto"
           >
             {[
               { 

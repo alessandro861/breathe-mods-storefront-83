@@ -1,25 +1,26 @@
 
 import * as React from "react"
 
-const MOBILE_BREAKPOINT = 768
+// Define a smaller breakpoint for better mobile detection
+const MOBILE_BREAKPOINT = 640
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(false)
 
   React.useEffect(() => {
-    // Set initial state
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    
-    // Create handler function
-    const handleResize = () => {
+    // Function to check if device is mobile based on screen width
+    const checkIfMobile = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
     
-    // Add event listener
-    window.addEventListener("resize", handleResize)
+    // Initial check
+    checkIfMobile()
+    
+    // Add event listener for resize
+    window.addEventListener("resize", checkIfMobile)
     
     // Clean up
-    return () => window.removeEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", checkIfMobile)
   }, [])
 
   return isMobile
