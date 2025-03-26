@@ -16,12 +16,12 @@ const Index: React.FC = () => {
   
   return (
     <Layout>
-      <div className="container mx-auto flex flex-col items-center justify-center space-y-12 md:space-y-20">
+      <div className="container mx-auto flex flex-col items-center justify-center space-y-8 md:space-y-20 px-4 md:px-0">
         {/* Hero Section */}
         <HeroSection />
         
         {/* Main Action Buttons */}
-        <section className="w-full px-4 md:px-0">
+        <section className="w-full">
           <motion.div 
             className="flex flex-col items-center text-center"
             initial={{ opacity: 0 }}
@@ -32,10 +32,10 @@ const Index: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.5 }}
-              className={`flex ${isMobile ? 'flex-col w-full' : 'flex-wrap gap-4'} justify-center`}
+              className="flex flex-col w-full md:flex-row md:flex-wrap md:gap-4 md:justify-center"
             >
-              <Link to="/free-mods" className={isMobile ? 'w-full mb-3' : ''}>
-                <Button size="lg" className={`text-md group ${isMobile ? 'w-full' : ''}`}>
+              <Link to="/free-mods" className="w-full md:w-auto mb-3 md:mb-0">
+                <Button size="lg" className="text-md group w-full md:w-auto">
                   <Download className="mr-2 h-5 w-5 group-hover:animate-pulse" />
                   Get Mods
                   <ArrowRight className="ml-2 h-4 w-4 opacity-70" />
@@ -45,16 +45,16 @@ const Index: React.FC = () => {
                 href="https://discord.gg/Yr8aY3fW4f" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={isMobile ? 'w-full mb-3' : ''}
+                className="w-full md:w-auto mb-3 md:mb-0"
               >
-                <Button size="lg" variant="outline" className={`text-md ${isMobile ? 'w-full' : ''}`}>
+                <Button size="lg" variant="outline" className="text-md w-full md:w-auto">
                   <Ticket className="mr-2 h-5 w-5" />
                   Join Discord
                 </Button>
               </a>
               {currentUser && (
-                <Link to="/purchases" className={isMobile ? 'w-full' : ''}>
-                  <Button size="lg" variant="secondary" className={`text-md ${isMobile ? 'w-full' : ''}`}>
+                <Link to="/purchases" className="w-full md:w-auto">
+                  <Button size="lg" variant="secondary" className="text-md w-full md:w-auto">
                     <ShoppingBag className="mr-2 h-5 w-5" />
                     My Purchases
                   </Button>
@@ -65,41 +65,41 @@ const Index: React.FC = () => {
         </section>
 
         {/* Features Section */}
-        <section className="w-full px-4 md:px-0">
+        <section className="w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.7 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto"
           >
             {[
               { 
-                icon: <Star className="h-10 w-10 text-primary mb-4" />,
+                icon: <Star className="h-8 w-8 text-primary mb-3" />,
                 title: "Premium Quality", 
                 desc: "Meticulously crafted modifications that enhance your gameplay without compromising stability" 
               },
               { 
-                icon: <Shield className="h-10 w-10 text-primary mb-4" />,
+                icon: <Shield className="h-8 w-8 text-primary mb-3" />,
                 title: "Regularly Updated", 
                 desc: "All mods are maintained and updated to ensure compatibility with the latest game versions" 
               },
               { 
-                icon: <Gift className="h-10 w-10 text-primary mb-4" />,
+                icon: <Gift className="h-8 w-8 text-primary mb-3" />,
                 title: "Custom Options", 
                 desc: "Request personalized modifications tailored to your specific needs through our Discord" 
               }
             ].map((feature, index) => (
               <motion.div 
                 key={index} 
-                className="glass-panel rounded-xl p-6 md:p-8 text-center transition-all duration-300 hover:scale-105 hover:shadow-primary/20"
+                className="glass-panel rounded-xl p-5 text-center transition-all duration-300 hover:scale-105 hover:shadow-primary/20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1 + (index * 0.2), duration: 0.5 }}
               >
                 <div className="flex flex-col items-center">
                   {feature.icon}
-                  <h3 className="text-xl font-medium mb-2 md:mb-3 text-primary">{feature.title}</h3>
-                  <p className="text-gray-300 text-sm md:text-base">{feature.desc}</p>
+                  <h3 className="text-lg font-medium mb-2 text-primary">{feature.title}</h3>
+                  <p className="text-gray-300 text-sm">{feature.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -107,9 +107,9 @@ const Index: React.FC = () => {
         </section>
 
         {/* Quick Access */}
-        <section className="w-full px-4 md:px-0 pb-6 md:pb-0">
+        <section className="w-full pb-6 md:pb-0">
           <motion.div 
-            className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'} gap-3 md:gap-6 w-full max-w-5xl mx-auto`}
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 w-full max-w-5xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.7, duration: 0.5 }}
