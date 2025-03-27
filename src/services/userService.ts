@@ -81,6 +81,8 @@ export const addSampleData = (): void => {
     
     localStorage.setItem('users', JSON.stringify(sampleUsers));
     console.log('Sample user data initialized');
+  } else {
+    console.log('Users already exist in localStorage, skipping sample data addition');
   }
 };
 
