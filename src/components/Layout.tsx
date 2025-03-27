@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedBackground from './AnimatedBackground';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Construction, LogIn, LogOut, Shield, Ticket } from 'lucide-react';
+import { Construction, LogIn, LogOut, Shield, Ticket, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/hooks/useAdmin';
 import { getCurrentUser, clearUserSession } from '@/services/userService';
@@ -110,15 +110,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </nav>
                 
                 {currentUser ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={isAdmin ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20" : ""}
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    {isAdmin ? 'Log Out (Admin)' : 'Log Out'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Link to="/profile">
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                        <UserRound className="w-4 h-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={isAdmin ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20" : ""}
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {isAdmin ? 'Log Out (Admin)' : 'Log Out'}
+                    </Button>
+                  </div>
                 ) : (
                   <Link to="/login">
                     <Button variant="outline" size="sm">

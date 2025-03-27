@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import NavButton from '../components/NavButton';
 import { Button } from '@/components/ui/button';
-import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag, Menu } from 'lucide-react';
+import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag, Menu, UserRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCurrentUser } from '@/services/userService';
 import HeroSection from '../components/HeroSection';
@@ -118,7 +118,10 @@ const Index: React.FC = () => {
             <NavButton to="/free-mods" label="Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
             <NavButton to="/tickets" label="Ticket System" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
             {currentUser && (
-              <NavButton to="/purchases" label="My Purchases" icon={<ShoppingBag className="h-5 w-5 text-primary" />} delay={0.6} comingSoon={false} />
+              <>
+                <NavButton to="/purchases" label="My Purchases" icon={<ShoppingBag className="h-5 w-5 text-primary" />} delay={0.6} comingSoon={false} />
+                <NavButton to="/profile" label="My Profile" icon={<UserRound className="h-5 w-5 text-primary" />} delay={0.8} comingSoon={false} />
+              </>
             )}
           </motion.div>
         </section>
