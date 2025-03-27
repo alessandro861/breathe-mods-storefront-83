@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getCurrentUser, getUserProfile, updateUserProfile, getUserPurchases, Purchase } from '@/services/userService';
+import { getCurrentUser, getUserProfile, updateUserProfile, getUserPurchases, Purchase, updateWhitelistForPurchase } from '@/services/userService';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { UserCog, Mail, User, Key, ShoppingBag } from 'lucide-react';
+import { UserCog, Mail, User, Key, ShoppingBag, ServerIcon, Edit, Plus, Save, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 const UserProfile = () => {
   const [profile, setProfile] = useState({
@@ -29,9 +30,25 @@ const UserProfile = () => {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<string | null>(null);
+  const [secondWhitelistMode, setSecondWhitelistMode] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const currentUser = getCurrentUser();
+
+  // Temporary state for editing purchase whitelists
+  const [editedWhitelist, setEditedWhitelist] = useState({
+    serverName: '',
+    serverIp: '',
+    serverPort: '',
+  });
+  
+  // State for second whitelist data
+  const [secondWhitelist, setSecondWhitelist] = useState({
+    serverName: '',
+    serverIp: '',
+    serverPort: '',
+  });
 
   useEffect(() => {
     if (!currentUser) {
@@ -99,6 +116,77 @@ const UserProfile = () => {
     });
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     setIsChangingPassword(false);
+  };
+
+  // Start editing a purchase whitelist
+  const startEditingPurchase = (purchaseId: string) => {
+    const purchase = purchases.find(p => p.id === purchaseId);
+    if (purchase) {
+      setEditedWhitelist({
+        serverName: purchase.serverName || '',
+        serverIp: purchase.serverIp || '',
+        serverPort: purchase.serverPort || '',
+      });
+      setEditingPurchase(purchaseId);
+    }
+  };
+
+  // Start adding a second whitelist to a purchase
+  const startAddingSecondWhitelist = (purchaseId: string) => {
+    const purchase = purchases.find(p => p.id === purchaseId);
+    if (purchase) {
+      setSecondWhitelist({
+        serverName: purchase.secondServerName || '',
+        serverIp: purchase.secondServerIp || '',
+        serverPort: purchase.secondServerPort || '',
+      });
+      setSecondWhitelistMode(purchaseId);
+    }
+  };
+
+  // Save whitelist changes
+  const saveWhitelistChanges = (purchaseId: string, isSecondWhitelist: boolean = false) => {
+    // Update the purchase with new whitelist information
+    const updatedPurchase = updateWhitelistForPurchase(
+      currentUser,
+      purchaseId,
+      isSecondWhitelist ? secondWhitelist : editedWhitelist,
+      isSecondWhitelist
+    );
+
+    if (updatedPurchase) {
+      // Update the local state to reflect changes
+      setPurchases(prevPurchases => 
+        prevPurchases.map(p => p.id === purchaseId ? updatedPurchase : p)
+      );
+
+      toast({
+        title: `${isSecondWhitelist ? 'Second whitelist' : 'Whitelist'} updated`,
+        description: `Your server details have been successfully updated.`,
+      });
+
+      // Close the editing mode
+      if (isSecondWhitelist) {
+        setSecondWhitelistMode(null);
+      } else {
+        setEditingPurchase(null);
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to update whitelist information. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Cancel whitelist editing
+  const cancelWhitelistEditing = (isSecondWhitelist: boolean = false) => {
+    if (isSecondWhitelist) {
+      setSecondWhitelistMode(null);
+    } else {
+      setEditingPurchase(null);
+    }
   };
 
   if (!currentUser) {
@@ -339,10 +427,10 @@ const UserProfile = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingBag className="h-5 w-5" />
-                    Your Purchases
+                    Your Purchases & Whitelists
                   </CardTitle>
                   <CardDescription>
-                    View all products and mods you've purchased
+                    View and manage your purchases and server whitelists
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -357,33 +445,211 @@ const UserProfile = () => {
                       </Button>
                     </div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Product</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Price</TableHead>
-                          <TableHead>Server</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {purchases.map((purchase) => (
-                          <TableRow key={purchase.id}>
-                            <TableCell className="font-medium">{purchase.productName}</TableCell>
-                            <TableCell>{purchase.date}</TableCell>
-                            <TableCell>${purchase.price.toFixed(2)}</TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p className="font-medium">{purchase.serverName || 'N/A'}</p>
-                                <p className="text-muted-foreground">
-                                  {purchase.serverIp}:{purchase.serverPort}
-                                </p>
+                    <div className="space-y-8">
+                      {purchases.map((purchase) => (
+                        <div key={purchase.id} className="border border-border rounded-lg p-4 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-medium mb-1">{purchase.productName}</h3>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <span>Purchased: {purchase.date}</span>
+                                <span>•</span>
+                                <span>${purchase.price.toFixed(2)}</span>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            </div>
+                            <Badge variant="outline" className="px-2 py-1 border-primary/30 bg-primary/10">
+                              {purchase.secondServerName ? "2/2 Whitelists" : "1/2 Whitelists"}
+                            </Badge>
+                          </div>
+                          
+                          <Separator className="my-3" />
+                          
+                          {/* Primary Whitelist */}
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-medium flex items-center gap-1">
+                                <ServerIcon className="h-4 w-4 text-primary" /> 
+                                Primary Whitelist
+                              </h4>
+                              {!editingPurchase && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => startEditingPurchase(purchase.id)}
+                                  className="h-8"
+                                >
+                                  <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {editingPurchase === purchase.id ? (
+                              <div className="space-y-3 border border-primary/20 rounded-md p-3 bg-primary/5">
+                                <div className="space-y-1">
+                                  <Label htmlFor={`server-name-${purchase.id}`}>Server Name</Label>
+                                  <Input
+                                    id={`server-name-${purchase.id}`}
+                                    value={editedWhitelist.serverName}
+                                    onChange={(e) => setEditedWhitelist({...editedWhitelist, serverName: e.target.value})}
+                                    placeholder="Enter server name"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor={`server-ip-${purchase.id}`}>Server IP</Label>
+                                  <Input
+                                    id={`server-ip-${purchase.id}`}
+                                    value={editedWhitelist.serverIp}
+                                    onChange={(e) => setEditedWhitelist({...editedWhitelist, serverIp: e.target.value})}
+                                    placeholder="Enter server IP"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor={`server-port-${purchase.id}`}>Server Port</Label>
+                                  <Input
+                                    id={`server-port-${purchase.id}`}
+                                    value={editedWhitelist.serverPort}
+                                    onChange={(e) => setEditedWhitelist({...editedWhitelist, serverPort: e.target.value})}
+                                    placeholder="Enter server port"
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2 mt-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => cancelWhitelistEditing()}
+                                    className="h-8"
+                                  >
+                                    <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                                  </Button>
+                                  <Button 
+                                    variant="default" 
+                                    size="sm" 
+                                    onClick={() => saveWhitelistChanges(purchase.id)}
+                                    className="h-8"
+                                  >
+                                    <Save className="h-3.5 w-3.5 mr-1" /> Save
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border border-border rounded-md p-3">
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-1">Server Name</p>
+                                  <p className="font-medium">{purchase.serverName || "Not set"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-1">Server IP</p>
+                                  <p className="font-medium">{purchase.serverIp || "Not set"}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-1">Server Port</p>
+                                  <p className="font-medium">{purchase.serverPort || "Not set"}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Secondary Whitelist */}
+                          <div className="space-y-3 mt-4">
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-medium flex items-center gap-1">
+                                <ServerIcon className="h-4 w-4 text-primary" /> 
+                                Secondary Whitelist
+                              </h4>
+                              {!purchase.secondServerName && !secondWhitelistMode && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => startAddingSecondWhitelist(purchase.id)}
+                                  className="h-8"
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Second Whitelist
+                                </Button>
+                              )}
+                              {purchase.secondServerName && !secondWhitelistMode && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => startAddingSecondWhitelist(purchase.id)}
+                                  className="h-8"
+                                >
+                                  <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+                                </Button>
+                              )}
+                            </div>
+                            
+                            {secondWhitelistMode === purchase.id ? (
+                              <div className="space-y-3 border border-primary/20 rounded-md p-3 bg-primary/5">
+                                <div className="space-y-1">
+                                  <Label htmlFor={`second-server-name-${purchase.id}`}>Server Name</Label>
+                                  <Input
+                                    id={`second-server-name-${purchase.id}`}
+                                    value={secondWhitelist.serverName}
+                                    onChange={(e) => setSecondWhitelist({...secondWhitelist, serverName: e.target.value})}
+                                    placeholder="Enter server name"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor={`second-server-ip-${purchase.id}`}>Server IP</Label>
+                                  <Input
+                                    id={`second-server-ip-${purchase.id}`}
+                                    value={secondWhitelist.serverIp}
+                                    onChange={(e) => setSecondWhitelist({...secondWhitelist, serverIp: e.target.value})}
+                                    placeholder="Enter server IP"
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor={`second-server-port-${purchase.id}`}>Server Port</Label>
+                                  <Input
+                                    id={`second-server-port-${purchase.id}`}
+                                    value={secondWhitelist.serverPort}
+                                    onChange={(e) => setSecondWhitelist({...secondWhitelist, serverPort: e.target.value})}
+                                    placeholder="Enter server port"
+                                  />
+                                </div>
+                                <div className="flex justify-end gap-2 mt-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => cancelWhitelistEditing(true)}
+                                    className="h-8"
+                                  >
+                                    <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                                  </Button>
+                                  <Button 
+                                    variant="default" 
+                                    size="sm" 
+                                    onClick={() => saveWhitelistChanges(purchase.id, true)}
+                                    className="h-8"
+                                  >
+                                    <Save className="h-3.5 w-3.5 mr-1" /> Save
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : purchase.secondServerName ? (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 border border-border rounded-md p-3">
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-1">Server Name</p>
+                                  <p className="font-medium">{purchase.secondServerName}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-1">Server IP</p>
+                                  <p className="font-medium">{purchase.secondServerIp}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-muted-foreground mb-1">Server Port</p>
+                                  <p className="font-medium">{purchase.secondServerPort}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="border border-dashed border-border rounded-md p-4 text-center text-muted-foreground">
+                                No secondary whitelist configured yet
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </CardContent>
                 <CardFooter>

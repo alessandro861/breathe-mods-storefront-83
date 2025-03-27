@@ -1,13 +1,9 @@
-// userService.ts
-interface User {
-  email: string;
-  password?: string;
-  username?: string;
-  displayName?: string;
-  avatar?: string;
+export interface UserProfile {
+  username: string;
+  displayName: string;
+  avatar: string;
 }
 
-// Purchase interface needed by other components
 export interface Purchase {
   id: string;
   productName: string;
@@ -16,394 +12,144 @@ export interface Purchase {
   serverName?: string;
   serverIp?: string;
   serverPort?: string;
+  secondServerName?: string;
+  secondServerIp?: string;
+  secondServerPort?: string;
 }
 
-const USERS_KEY = 'users';
-const PURCHASES_KEY = 'user_purchases';
-const RESET_TOKENS_KEY = 'reset_tokens';
-const OTP_CODES_KEY = 'otp_codes';
-const USER_PROFILES_KEY = 'user_profiles';
-
-// Initialize users in localStorage if they don't exist
-if (!localStorage.getItem(USERS_KEY)) {
-  localStorage.setItem(USERS_KEY, JSON.stringify([]));
-}
-
-// Initialize purchases in localStorage if they don't exist
-if (!localStorage.getItem(PURCHASES_KEY)) {
-  localStorage.setItem(PURCHASES_KEY, JSON.stringify({}));
-}
-
-// Initialize OTP codes in localStorage if they don't exist
-if (!localStorage.getItem(OTP_CODES_KEY)) {
-  localStorage.setItem(OTP_CODES_KEY, JSON.stringify({}));
-}
-
-// Initialize user profiles in localStorage if they don't exist
-if (!localStorage.getItem(USER_PROFILES_KEY)) {
-  localStorage.setItem(USER_PROFILES_KEY, JSON.stringify({}));
-}
-
-// Function to add sample data (for testing purposes)
-export const addSampleData = () => {
-  let users = getUsers();
-  if (users.length === 0) {
-    const sampleUsers = [
-      { email: 'admin@gmail.com', password: 'Admin1234!' },
-      { email: 'user1@example.com', password: 'User1234!' },
-      { email: 'user2@example.com', password: 'User5678!' },
-    ];
-    saveUsers(sampleUsers);
-    console.log('Sample users added to localStorage');
-  } else {
-    console.log('Users already exist in localStorage, skipping sample data addition');
-  }
-};
-
-// Function to get users from localStorage
-export const getUsers = (): User[] => {
-  const usersJson = localStorage.getItem(USERS_KEY);
-  return usersJson ? JSON.parse(usersJson) : [];
-};
-
-// Function to save users to localStorage
-const saveUsers = (users: User[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
-
-// Function to save a new user (for signup)
-export const saveUser = (userData: User): boolean => {
-  const users = getUsers();
-  
-  // Check if user with this email already exists
-  const userExists = users.some(user => user.email === userData.email);
-  
-  if (userExists) {
-    return false; // User already exists
-  }
-  
-  // Add the new user
-  users.push(userData);
-  saveUsers(users);
-  return true;
-};
-
-// Function to validate login credentials
-export const validateLogin = (email: string, password?: string): boolean => {
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-  return !!user && user.password === password;
-};
-
-// Function to save user session (in a real app, use a more secure method)
-export const saveUserSession = (email: string) => {
-  localStorage.setItem('currentUser', email);
-};
-
-// Function to get current user from session
 export const getCurrentUser = (): string | null => {
   return localStorage.getItem('currentUser');
 };
 
-// Function to clear user session
-export const clearUserSession = () => {
-  localStorage.removeItem('currentUser');
-};
+export const getUserProfile = (email: string): UserProfile | null => {
+  const usersData = localStorage.getItem('users');
 
-// USER PROFILE FUNCTIONALITY
-
-// Get a user profile
-export const getUserProfile = (email: string): User | null => {
-  const profilesJson = localStorage.getItem(USER_PROFILES_KEY);
-  const profiles = profilesJson ? JSON.parse(profilesJson) : {};
-  
-  return profiles[email] || null;
-};
-
-// Update a user profile
-export const updateUserProfile = (email: string, profileData: Partial<User>): boolean => {
-  try {
-    const profilesJson = localStorage.getItem(USER_PROFILES_KEY);
-    const profiles = profilesJson ? JSON.parse(profilesJson) : {};
-    
-    // Get existing profile or create new one
-    const existingProfile = profiles[email] || {};
-    
-    // Update the profile
-    profiles[email] = {
-      ...existingProfile,
-      ...profileData,
-      email // ensure email is always present
-    };
-    
-    // Save profiles back to localStorage
-    localStorage.setItem(USER_PROFILES_KEY, JSON.stringify(profiles));
-    return true;
-  } catch (error) {
-    console.error('Error updating user profile:', error);
-    return false;
-  }
-};
-
-// PURCHASES FUNCTIONALITY
-
-// Function to get all purchases for a user
-export const getUserPurchases = (userEmail: string): Purchase[] => {
-  const purchasesJson = localStorage.getItem(PURCHASES_KEY);
-  const allPurchases = purchasesJson ? JSON.parse(purchasesJson) : {};
-  
-  // Return the user's purchases or an empty array if none exist
-  return allPurchases[userEmail] || [];
-};
-
-// Function to add a purchase for a user
-export const addPurchase = (userEmail: string, purchase: Purchase): boolean => {
-  try {
-    const purchasesJson = localStorage.getItem(PURCHASES_KEY);
-    const allPurchases = purchasesJson ? JSON.parse(purchasesJson) : {};
-    
-    // Initialize user's purchases array if it doesn't exist
-    if (!allPurchases[userEmail]) {
-      allPurchases[userEmail] = [];
+  if (usersData) {
+    const users = JSON.parse(usersData);
+    const user = users.find((u: any) => u.email === email);
+    if (user) {
+      return {
+        username: user.username || '',
+        displayName: user.displayName || '',
+        avatar: user.avatar || '',
+      };
     }
-    
-    // Add the new purchase
-    allPurchases[userEmail].push(purchase);
-    
-    // Save back to localStorage
-    localStorage.setItem(PURCHASES_KEY, JSON.stringify(allPurchases));
-    return true;
-  } catch (error) {
-    console.error('Error adding purchase:', error);
-    return false;
   }
+
+  return null;
 };
 
-// Function to update a purchase
-export const updatePurchase = (userEmail: string, purchaseId: string, updateData: Partial<Purchase>): boolean => {
-  try {
-    const purchasesJson = localStorage.getItem(PURCHASES_KEY);
-    const allPurchases = purchasesJson ? JSON.parse(purchasesJson) : {};
-    
-    // Check if user has purchases
-    if (!allPurchases[userEmail]) {
-      return false;
+export const updateUserProfile = (email: string, profileData: UserProfile): boolean => {
+  const usersData = localStorage.getItem('users');
+
+  if (usersData) {
+    const users = JSON.parse(usersData);
+    const userIndex = users.findIndex((u: any) => u.email === email);
+
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], ...profileData };
+      localStorage.setItem('users', JSON.stringify(users));
+      return true;
     }
+  }
+
+  return false;
+};
+
+export const getUserPurchases = (email: string): Purchase[] => {
+  const usersData = localStorage.getItem('users');
+  if (usersData) {
+    const users = JSON.parse(usersData);
+    const user = users.find((u: any) => u.email === email);
+    if (user && user.purchases) {
+      return user.purchases;
+    }
+  }
+  return [];
+};
+
+export const addPurchase = (email: string, purchaseData: Purchase): boolean => {
+  const usersData = localStorage.getItem('users');
+  if (usersData) {
+    const users = JSON.parse(usersData);
+    const userIndex = users.findIndex((u: any) => u.email === email);
+
+    if (userIndex !== -1) {
+      if (!users[userIndex].purchases) {
+        users[userIndex].purchases = [];
+      }
+      users[userIndex].purchases.push(purchaseData);
+      localStorage.setItem('users', JSON.stringify(users));
+      return true;
+    }
+  }
+  return false;
+};
+
+export const updatePurchase = (email: string, purchaseId: string, purchaseData: Partial<Purchase>): boolean => {
+  const usersData = localStorage.getItem('users');
+  if (!usersData) return false;
+
+  const users = JSON.parse(usersData);
+  const user = users.find((u: any) => u.email === email);
+
+  if (!user || !user.purchases) return false;
+
+  const purchaseIndex = user.purchases.findIndex((p: Purchase) => p.id === purchaseId);
+  if (purchaseIndex === -1) return false;
+
+  user.purchases[purchaseIndex] = { ...user.purchases[purchaseIndex], ...purchaseData };
+  localStorage.setItem('users', JSON.stringify(users));
+  return true;
+};
+
+export const updateWhitelistForPurchase = (
+  userEmail: string,
+  purchaseId: string,
+  whitelistData: {
+    serverName: string;
+    serverIp: string;
+    serverPort: string;
+  },
+  isSecondWhitelist: boolean = false
+): Purchase | null => {
+  try {
+    // Get the user data from localStorage
+    const usersData = localStorage.getItem('users');
+    if (!usersData) return null;
+    
+    const users = JSON.parse(usersData);
+    const user = users.find((u: any) => u.email === userEmail);
+    
+    if (!user || !user.purchases) return null;
     
     // Find the purchase to update
-    const userPurchases = allPurchases[userEmail];
-    const purchaseIndex = userPurchases.findIndex((p: Purchase) => p.id === purchaseId);
+    const purchaseIndex = user.purchases.findIndex((p: Purchase) => p.id === purchaseId);
+    if (purchaseIndex === -1) return null;
     
-    if (purchaseIndex === -1) {
-      return false; // Purchase not found
+    // Update the purchase with the new whitelist information
+    if (isSecondWhitelist) {
+      user.purchases[purchaseIndex] = {
+        ...user.purchases[purchaseIndex],
+        secondServerName: whitelistData.serverName,
+        secondServerIp: whitelistData.serverIp,
+        secondServerPort: whitelistData.serverPort
+      };
+    } else {
+      user.purchases[purchaseIndex] = {
+        ...user.purchases[purchaseIndex],
+        serverName: whitelistData.serverName,
+        serverIp: whitelistData.serverIp,
+        serverPort: whitelistData.serverPort
+      };
     }
     
-    // Update the purchase
-    allPurchases[userEmail][purchaseIndex] = {
-      ...allPurchases[userEmail][purchaseIndex],
-      ...updateData
-    };
+    // Save the updated data back to localStorage
+    localStorage.setItem('users', JSON.stringify(users));
     
-    // Save back to localStorage
-    localStorage.setItem(PURCHASES_KEY, JSON.stringify(allPurchases));
-    return true;
+    return user.purchases[purchaseIndex];
   } catch (error) {
-    console.error('Error updating purchase:', error);
-    return false;
-  }
-};
-
-// OTP Reset Password functionality
-
-interface OTPCode {
-  email: string;
-  code: string;
-  expiry: number; // timestamp
-}
-
-// Get all OTP codes
-export const getOTPCodes = (): Record<string, OTPCode> => {
-  const codesJson = localStorage.getItem(OTP_CODES_KEY);
-  return codesJson ? JSON.parse(codesJson) : {};
-};
-
-// Save OTP codes
-const saveOTPCodes = (codes: Record<string, OTPCode>) => {
-  localStorage.setItem(OTP_CODES_KEY, JSON.stringify(codes));
-};
-
-// Generate a 6-digit OTP code
-export const generateOTPCode = (email: string): string | null => {
-  // Verify that the user exists
-  const users = getUsers();
-  const userExists = users.some(user => user.email === email);
-  
-  if (!userExists) {
-    // For security reasons, we should not inform the user that the email doesn't exist
-    // But we won't generate a code either
+    console.error('Error updating whitelist:', error);
     return null;
   }
-  
-  // Generate a 6-digit code
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Set expiry to 10 minutes from now
-  const expiry = Date.now() + (10 * 60 * 1000);
-  
-  // Save the code
-  const otpCodes = getOTPCodes();
-  
-  // Add or update the code for this email
-  otpCodes[email] = { email, code, expiry };
-  
-  // Save codes back to localStorage
-  saveOTPCodes(otpCodes);
-  
-  return code;
-};
-
-// Validate OTP code
-export const validateOTPCode = (email: string, code: string): boolean => {
-  const otpCodes = getOTPCodes();
-  const userCode = otpCodes[email];
-  
-  if (!userCode) {
-    return false;
-  }
-  
-  // Check if code has expired
-  if (userCode.expiry < Date.now()) {
-    // Remove expired code
-    delete otpCodes[email];
-    saveOTPCodes(otpCodes);
-    return false;
-  }
-  
-  // Check if code matches
-  if (userCode.code !== code) {
-    return false;
-  }
-  
-  return true;
-};
-
-// Create a reset token after OTP verification
-export const createResetTokenAfterOTP = (email: string): string => {
-  // Generate a random token
-  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  
-  // Set expiry to 30 minutes from now
-  const expiry = Date.now() + (30 * 60 * 1000);
-  
-  // Save the token
-  const tokens = getResetTokens();
-  
-  // Remove any existing tokens for this email
-  const filteredTokens = tokens.filter(t => t.email !== email);
-  
-  // Add the new token
-  filteredTokens.push({ email, token, expiry });
-  
-  // Save tokens back to localStorage
-  saveResetTokens(filteredTokens);
-  
-  return token;
-};
-
-// Password reset functionality
-
-interface ResetToken {
-  email: string;
-  token: string;
-  expiry: number; // timestamp
-}
-
-// Get all reset tokens
-export const getResetTokens = (): ResetToken[] => {
-  const tokensJson = localStorage.getItem(RESET_TOKENS_KEY);
-  return tokensJson ? JSON.parse(tokensJson) : [];
-};
-
-// Save reset tokens
-const saveResetTokens = (tokens: ResetToken[]) => {
-  localStorage.setItem(RESET_TOKENS_KEY, JSON.stringify(tokens));
-};
-
-// Generate a reset token for an email
-export const generateResetToken = (email: string): string | null => {
-  // Verify that the user exists
-  const users = getUsers();
-  const userExists = users.some(user => user.email === email);
-  
-  if (!userExists) {
-    // For security reasons, we should not inform the user that the email doesn't exist
-    // But we won't generate a token either
-    return null;
-  }
-  
-  // Generate a random token
-  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  
-  // Set expiry to 24 hours from now
-  const expiry = Date.now() + (24 * 60 * 60 * 1000);
-  
-  // Save the token
-  const tokens = getResetTokens();
-  
-  // Remove any existing tokens for this email
-  const filteredTokens = tokens.filter(t => t.email !== email);
-  
-  // Add the new token
-  filteredTokens.push({ email, token, expiry });
-  
-  // Save tokens back to localStorage
-  saveResetTokens(filteredTokens);
-  
-  return token;
-};
-
-// Validate reset token
-export const validateResetToken = (email: string, token: string): boolean => {
-  const tokens = getResetTokens();
-  const resetToken = tokens.find(t => t.email === email && t.token === token);
-  
-  if (!resetToken) {
-    return false;
-  }
-  
-  // Check if token has expired
-  if (resetToken.expiry < Date.now()) {
-    // Remove expired token
-    const filteredTokens = tokens.filter(t => !(t.email === email && t.token === token));
-    saveResetTokens(filteredTokens);
-    return false;
-  }
-  
-  return true;
-};
-
-// Reset password with token
-export const resetPassword = (email: string, token: string, newPassword: string): boolean => {
-  // Validate the token first
-  if (!validateResetToken(email, token)) {
-    return false;
-  }
-  
-  // Update user's password
-  const users = getUsers();
-  const updatedUsers = users.map(user => {
-    if (user.email === email) {
-      return { ...user, password: newPassword };
-    }
-    return user;
-  });
-  
-  saveUsers(updatedUsers);
-  
-  // Remove the used token
-  const tokens = getResetTokens();
-  const filteredTokens = tokens.filter(t => !(t.email === email && t.token === token));
-  saveResetTokens(filteredTokens);
-  
-  return true;
 };

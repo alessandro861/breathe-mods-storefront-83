@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Dialog, 
@@ -19,12 +19,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Server, Globe, Plug, Save } from 'lucide-react';
+import { Server, Globe, Plug, Save, Plus, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Purchase, getCurrentUser, updatePurchase } from '@/services/userService';
+import { Purchase, getCurrentUser, updateWhitelistForPurchase } from '@/services/userService';
 import { createDiscordPurchaseMessage, sendDiscordWebhook } from '@/utils/discordIntegration';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 // Define the form schema with validation
 const editFormSchema = z.object({
@@ -39,7 +41,11 @@ const editFormSchema = z.object({
   }),
 });
 
+// Second whitelist schema is the same
+const secondWhitelistSchema = editFormSchema;
+
 type EditFormValues = z.infer<typeof editFormSchema>;
+type SecondWhitelistValues = z.infer<typeof secondWhitelistSchema>;
 
 interface PurchaseEditDialogProps {
   isOpen: boolean;
@@ -55,10 +61,12 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
   onPurchaseUpdated
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("primary");
+  const [showSecondWhitelist, setShowSecondWhitelist] = useState(false);
   const { toast } = useToast();
   
-  // Initialize form with validation
-  const form = useForm<EditFormValues>({
+  // Initialize primary whitelist form with validation
+  const primaryForm = useForm<EditFormValues>({
     resolver: zodResolver(editFormSchema),
     defaultValues: {
       serverName: purchase.serverName || '',
@@ -66,8 +74,37 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
       serverPort: purchase.serverPort || '',
     },
   });
-
-  const onSubmit = async (data: EditFormValues) => {
+  
+  // Initialize secondary whitelist form
+  const secondaryForm = useForm<SecondWhitelistValues>({
+    resolver: zodResolver(secondWhitelistSchema),
+    defaultValues: {
+      serverName: purchase.secondServerName || '',
+      serverIp: purchase.secondServerIp || '',
+      serverPort: purchase.secondServerPort || '',
+    },
+  });
+  
+  // Update form values when purchase changes
+  useEffect(() => {
+    primaryForm.reset({
+      serverName: purchase.serverName || '',
+      serverIp: purchase.serverIp || '',
+      serverPort: purchase.serverPort || '',
+    });
+    
+    secondaryForm.reset({
+      serverName: purchase.secondServerName || '',
+      serverIp: purchase.secondServerIp || '',
+      serverPort: purchase.secondServerPort || '',
+    });
+    
+    // Check if we should show the second whitelist tab
+    setShowSecondWhitelist(!!purchase.secondServerName);
+    
+  }, [purchase, isOpen]);
+  
+  const onSubmitPrimary = async (data: EditFormValues) => {
     setIsSubmitting(true);
     
     try {
@@ -83,30 +120,27 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
       }
       
       // Update the purchase in the database
-      const success = updatePurchase(userEmail, purchase.id, {
-        serverName: data.serverName,
-        serverIp: data.serverIp,
-        serverPort: data.serverPort
-      });
+      const updatedPurchase = updateWhitelistForPurchase(
+        userEmail, 
+        purchase.id, 
+        {
+          serverName: data.serverName,
+          serverIp: data.serverIp,
+          serverPort: data.serverPort
+        },
+        false // This is the primary whitelist
+      );
       
-      if (!success) {
+      if (!updatedPurchase) {
         throw new Error("Failed to update purchase details");
       }
-      
-      // Create updated purchase object
-      const updatedPurchase: Purchase = {
-        ...purchase,
-        serverName: data.serverName,
-        serverIp: data.serverIp,
-        serverPort: data.serverPort
-      };
       
       // Send notification to Discord
       const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
       if (discordWebhookUrl) {
         // Create a message for the update notification
         const message = {
-          content: `🔄 **Purchase Update**\n` +
+          content: `🔄 **Purchase Update - Primary Whitelist**\n` +
             `Product: **${purchase.productName}**\n` +
             `Server Name: **${data.serverName}** (Updated)\n` +
             `Server IP: **${data.serverIp}** (Updated)\n` +
@@ -128,11 +162,13 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
       onPurchaseUpdated(updatedPurchase);
       
       toast({
-        title: "Purchase updated",
+        title: "Primary whitelist updated",
         description: "Your server details have been updated successfully.",
       });
       
-      setIsOpen(false);
+      if (activeTab === "primary" && !showSecondWhitelist) {
+        setIsOpen(false);
+      }
     } catch (error) {
       console.error("Error updating purchase:", error);
       toast({
@@ -144,98 +180,303 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
       setIsSubmitting(false);
     }
   };
+  
+  const onSubmitSecondary = async (data: SecondWhitelistValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      const userEmail = getCurrentUser();
+      
+      if (!userEmail) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to update your purchase.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Update the purchase in the database with second whitelist
+      const updatedPurchase = updateWhitelistForPurchase(
+        userEmail, 
+        purchase.id, 
+        {
+          serverName: data.serverName,
+          serverIp: data.serverIp,
+          serverPort: data.serverPort
+        },
+        true // This is the secondary whitelist
+      );
+      
+      if (!updatedPurchase) {
+        throw new Error("Failed to update purchase details");
+      }
+      
+      // Send notification to Discord
+      const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
+      if (discordWebhookUrl) {
+        // Create a message for the update notification
+        const message = {
+          content: `🔄 **Purchase Update - Secondary Whitelist**\n` +
+            `Product: **${purchase.productName}**\n` +
+            `Secondary Server Name: **${data.serverName}** (Added/Updated)\n` +
+            `Secondary Server IP: **${data.serverIp}** (Added/Updated)\n` +
+            `Secondary Server Port: **${data.serverPort}** (Added/Updated)\n`,
+          username: "Breathe Mods Bot",
+          avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
+        };
+        
+        try {
+          await sendDiscordWebhook(discordWebhookUrl, message);
+          console.log("Discord notification sent for secondary whitelist update");
+        } catch (error) {
+          console.error("Failed to send Discord notification:", error);
+        }
+      }
+      
+      // Call the callback to update UI
+      onPurchaseUpdated(updatedPurchase);
+      setShowSecondWhitelist(true);
+      
+      toast({
+        title: "Secondary whitelist updated",
+        description: "Your additional server details have been updated successfully.",
+      });
+      
+      if (activeTab === "secondary") {
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error("Error updating secondary whitelist:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating your secondary whitelist. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Server className="h-5 w-5 text-primary" /> 
-            Edit Server Details
+            Manage Whitelists
           </DialogTitle>
           <DialogDescription>
-            Update the server information for your purchase: {purchase.productName}
+            Update server information for: {purchase.productName}
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
-            <FormField
-              control={form.control}
-              name="serverName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <Server className="h-4 w-4 text-muted-foreground" />
-                    Server Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="My Awesome Server" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="serverIp"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    Server IP
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="000.000.000.000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="serverPort"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <Plug className="h-4 w-4 text-muted-foreground" />
-                    Server Port
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="30120" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter className="pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsOpen(false)}
+        <Tabs 
+          defaultValue="primary" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="mt-2"
+        >
+          <div className="flex justify-between items-center mb-2">
+            <TabsList>
+              <TabsTrigger value="primary">Primary Whitelist</TabsTrigger>
+              <TabsTrigger 
+                value="secondary" 
+                disabled={!showSecondWhitelist && activeTab !== "secondary"}
               >
-                Cancel
-              </Button>
+                Secondary Whitelist
+              </TabsTrigger>
+            </TabsList>
+            
+            {!showSecondWhitelist && activeTab === "primary" && (
               <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="gap-2"
+                size="sm" 
+                variant="outline"
+                onClick={() => setActiveTab("secondary")}
+                className="flex items-center gap-1"
               >
-                {isSubmitting ? (
-                  <>Processing...</>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Save Changes
-                  </>
-                )}
+                <Plus className="h-4 w-4" /> Add Second Whitelist
               </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            )}
+          </div>
+          
+          <TabsContent value="primary" className="mt-4">
+            <Form {...primaryForm}>
+              <form onSubmit={primaryForm.handleSubmit(onSubmitPrimary)} className="space-y-4">
+                <FormField
+                  control={primaryForm.control}
+                  name="serverName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Server className="h-4 w-4 text-muted-foreground" />
+                        Server Name
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="My Awesome Server" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={primaryForm.control}
+                  name="serverIp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        Server IP
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="000.000.000.000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={primaryForm.control}
+                  name="serverPort"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Plug className="h-4 w-4 text-muted-foreground" />
+                        Server Port
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="30120" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter className="pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </TabsContent>
+          
+          <TabsContent value="secondary" className="mt-4">
+            <div className="mb-4">
+              <Badge variant="outline" className="px-2 py-1 border-primary/30 bg-primary/10">
+                Whitelist 2 of 2
+              </Badge>
+              <p className="text-sm text-muted-foreground mt-2">
+                You can add a second whitelist for this purchase. This allows you to use the mod on two different servers.
+              </p>
+            </div>
+            
+            <Form {...secondaryForm}>
+              <form onSubmit={secondaryForm.handleSubmit(onSubmitSecondary)} className="space-y-4">
+                <FormField
+                  control={secondaryForm.control}
+                  name="serverName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Server className="h-4 w-4 text-muted-foreground" />
+                        Secondary Server Name
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="My Second Server" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={secondaryForm.control}
+                  name="serverIp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        Secondary Server IP
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="000.000.000.000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={secondaryForm.control}
+                  name="serverPort"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-1">
+                        <Plug className="h-4 w-4 text-muted-foreground" />
+                        Secondary Server Port
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="30120" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter className="pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      if (showSecondWhitelist) {
+                        setActiveTab("primary");
+                      } else {
+                        setIsOpen(false);
+                      }
+                    }}
+                  >
+                    {showSecondWhitelist ? "Back" : "Cancel"}
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        {showSecondWhitelist ? "Update Whitelist" : "Add Whitelist"}
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
