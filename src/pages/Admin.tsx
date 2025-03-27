@@ -10,7 +10,7 @@ import WebhookSettings from '@/components/admin/WebhookSettings';
 import { DiscountManager } from '@/components/admin/DiscountManager';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ShieldAlert, Ticket, BellRing, BadgePercent } from 'lucide-react';
+import { ShieldAlert, Ticket, BellRing, BadgePercent, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,10 @@ const AdminPage = () => {
 
           <Tabs defaultValue="manage-accounts" className="w-full">
             <TabsList className="mb-6 bg-background/50 backdrop-blur-sm border border-white/10">
-              <TabsTrigger value="manage-accounts">Manage Accounts</TabsTrigger>
+              <TabsTrigger value="manage-accounts" className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                Manage Accounts
+              </TabsTrigger>
               <TabsTrigger value="purchases">Purchase History</TabsTrigger>
               <TabsTrigger value="discount-codes" className="flex items-center gap-1">
                 <BadgePercent className="h-4 w-4" />

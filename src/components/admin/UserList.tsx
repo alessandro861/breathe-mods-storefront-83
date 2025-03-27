@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -14,26 +14,44 @@ import { Badge } from '@/components/ui/badge';
 import { Search, UserCog, UserCheck, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-
-// Mock data for demonstration
-const MOCK_USERS = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', status: 'active', joinDate: '2023-05-12', purchaseCount: 3 },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'active', joinDate: '2023-06-18', purchaseCount: 5 },
-  { id: 3, name: 'Michael Johnson', email: 'michael@example.com', status: 'inactive', joinDate: '2023-04-22', purchaseCount: 0 },
-  { id: 4, name: 'Sarah Williams', email: 'sarah@example.com', status: 'active', joinDate: '2023-07-05', purchaseCount: 2 },
-  { id: 5, name: 'Robert Brown', email: 'robert@example.com', status: 'active', joinDate: '2023-08-30', purchaseCount: 1 },
-  { id: 6, name: 'Emily Davis', email: 'emily@example.com', status: 'inactive', joinDate: '2023-03-15', purchaseCount: 0 },
-  { id: 7, name: 'David Miller', email: 'david@example.com', status: 'active', joinDate: '2023-09-10', purchaseCount: 4 },
-];
+import { getUsers, getUserProfile, getUserPurchases } from '@/services/userService';
+import { useToast } from '@/hooks/use-toast';
 
 export const UserList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [users, setUsers] = useState<any[]>([]);
+  const { toast } = useToast();
   const usersPerPage = 5;
 
+  useEffect(() => {
+    // Load users when component mounts
+    loadUsers();
+  }, []);
+
+  const loadUsers = () => {
+    const allUsers = getUsers();
+    const enrichedUsers = allUsers.map(user => {
+      const profile = getUserProfile(user.email);
+      const purchases = getUserPurchases(user.email);
+      
+      return {
+        id: user.email,
+        name: profile?.displayName || profile?.username || user.email.split('@')[0],
+        email: user.email,
+        status: 'active', // In a real app, you'd have a user status field
+        joinDate: new Date().toISOString(), // This would come from user registration date in a real app
+        purchaseCount: purchases.length,
+        profile: profile
+      };
+    });
+    
+    setUsers(enrichedUsers);
+  };
+
   // Filter users based on search term
-  const filteredUsers = MOCK_USERS.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredUsers = users.filter(user => 
+    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -42,6 +60,23 @@ export const UserList = () => {
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
+  const toggleUserStatus = (userId: string) => {
+    // This is a simplified implementation that would need to be completed
+    // In a real app, you would update the user status in your database
+    toast({
+      title: "Status Updated",
+      description: `User status has been toggled.`,
+    });
+    
+    // Update the local state to reflect the change immediately
+    setUsers(users.map(user => {
+      if (user.id === userId) {
+        return {...user, status: user.status === 'active' ? 'inactive' : 'active'};
+      }
+      return user;
+    }));
+  };
 
   return (
     <div className="space-y-4">
@@ -70,41 +105,60 @@ export const UserList = () => {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Join Date</TableHead>
               <TableHead>Purchases</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {currentUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {user.status === 'active' ? (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">
-                      Active
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
-                      Inactive
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
-                <TableCell>{user.purchaseCount}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end space-x-2">
-                    <Button variant="outline" size="sm">
-                      <UserCheck className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-red-400 border-red-500/20 hover:bg-red-500/10">
-                      <UserX className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {currentUsers.length > 0 ? (
+              currentUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.status === 'active' ? (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20">
+                        Inactive
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>{user.purchaseCount}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      {user.status === 'active' ? (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toggleUserStatus(user.id)}
+                          title="Deactivate user"
+                        >
+                          <UserX className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => toggleUserStatus(user.id)}
+                          title="Activate user"
+                        >
+                          <UserCheck className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4">
+                  No users found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
         

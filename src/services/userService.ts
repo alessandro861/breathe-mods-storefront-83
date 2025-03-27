@@ -3,6 +3,8 @@ interface User {
   email: string;
   password?: string;
   username?: string;
+  displayName?: string;
+  avatar?: string;
 }
 
 // Purchase interface needed by other components
@@ -20,6 +22,7 @@ const USERS_KEY = 'users';
 const PURCHASES_KEY = 'user_purchases';
 const RESET_TOKENS_KEY = 'reset_tokens';
 const OTP_CODES_KEY = 'otp_codes';
+const USER_PROFILES_KEY = 'user_profiles';
 
 // Initialize users in localStorage if they don't exist
 if (!localStorage.getItem(USERS_KEY)) {
@@ -34,6 +37,11 @@ if (!localStorage.getItem(PURCHASES_KEY)) {
 // Initialize OTP codes in localStorage if they don't exist
 if (!localStorage.getItem(OTP_CODES_KEY)) {
   localStorage.setItem(OTP_CODES_KEY, JSON.stringify({}));
+}
+
+// Initialize user profiles in localStorage if they don't exist
+if (!localStorage.getItem(USER_PROFILES_KEY)) {
+  localStorage.setItem(USER_PROFILES_KEY, JSON.stringify({}));
 }
 
 // Function to add sample data (for testing purposes)
@@ -100,6 +108,41 @@ export const getCurrentUser = (): string | null => {
 // Function to clear user session
 export const clearUserSession = () => {
   localStorage.removeItem('currentUser');
+};
+
+// USER PROFILE FUNCTIONALITY
+
+// Get a user profile
+export const getUserProfile = (email: string): User | null => {
+  const profilesJson = localStorage.getItem(USER_PROFILES_KEY);
+  const profiles = profilesJson ? JSON.parse(profilesJson) : {};
+  
+  return profiles[email] || null;
+};
+
+// Update a user profile
+export const updateUserProfile = (email: string, profileData: Partial<User>): boolean => {
+  try {
+    const profilesJson = localStorage.getItem(USER_PROFILES_KEY);
+    const profiles = profilesJson ? JSON.parse(profilesJson) : {};
+    
+    // Get existing profile or create new one
+    const existingProfile = profiles[email] || {};
+    
+    // Update the profile
+    profiles[email] = {
+      ...existingProfile,
+      ...profileData,
+      email // ensure email is always present
+    };
+    
+    // Save profiles back to localStorage
+    localStorage.setItem(USER_PROFILES_KEY, JSON.stringify(profiles));
+    return true;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return false;
+  }
 };
 
 // PURCHASES FUNCTIONALITY
