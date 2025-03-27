@@ -174,7 +174,7 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       toast({
         title: "Purchase processed",
         description: userEmail 
-          ? `You have purchased ${modTitle} (${selectedPriceText}). You can view and manage this purchase in your account.`
+          ? `You have purchased ${modTitle} (${selectedPriceText}). Please consider leaving a review for your purchase.`
           : `You have purchased ${modTitle} (${selectedPriceText}). Create an account to manage your purchases.`,
         duration: 5000
       });
@@ -182,15 +182,15 @@ const PurchaseDialog: React.FC<PurchaseDialogProps> = ({
       form.reset();
       setIsOpen(false);
       
-      // If the user is logged in, suggest navigating to their purchases
+      // Redirect to review page if user is logged in
       if (userEmail) {
         setTimeout(() => {
           toast({
-            title: "View your purchases",
-            description: "Would you like to view and manage your purchases?",
+            title: "Would you like to leave a review?",
+            description: "Your feedback helps us improve!",
             action: (
-              <Button variant="outline" onClick={() => navigate('/purchases')}>
-                Go to Purchases
+              <Button variant="outline" onClick={() => navigate(`/submit-review?productId=${purchaseId}&productName=${encodeURIComponent(modTitle)}`)}>
+                Write Review
               </Button>
             ),
             duration: 8000

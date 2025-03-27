@@ -22,6 +22,7 @@ import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import UserPurchases from './pages/UserPurchases';
 import UserProfile from './pages/UserProfile';
+import SubmitReview from './pages/SubmitReview';
 import { AdminProvider } from './hooks/useAdmin';
 import { addSampleData } from './services/userService';
 
@@ -53,6 +54,7 @@ function App() {
           <Route path="/terms" element={<Terms />} />
           <Route path="/purchases" element={<UserPurchases />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/submit-review" element={<SubmitReview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />

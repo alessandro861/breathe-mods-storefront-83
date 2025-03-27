@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import NavButton from '../components/NavButton';
@@ -8,11 +7,18 @@ import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, Shoppin
 import { Link } from 'react-router-dom';
 import { getCurrentUser } from '@/services/userService';
 import HeroSection from '../components/HeroSection';
+import ReviewsSection from '../components/ReviewsSection';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { initializeSampleReviews } from '@/services/reviewService';
 
 const Index: React.FC = () => {
   const currentUser = getCurrentUser();
   const isMobile = useIsMobile();
+  
+  useEffect(() => {
+    // Initialize sample reviews on app load
+    initializeSampleReviews();
+  }, []);
   
   return (
     <Layout>
@@ -105,6 +111,9 @@ const Index: React.FC = () => {
             ))}
           </motion.div>
         </section>
+        
+        {/* Reviews Section */}
+        <ReviewsSection />
 
         {/* Quick Access */}
         <section className="w-full pb-6 md:pb-0">
