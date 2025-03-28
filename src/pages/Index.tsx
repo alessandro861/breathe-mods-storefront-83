@@ -3,21 +3,15 @@ import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import NavButton from '../components/NavButton';
 import { Button } from '@/components/ui/button';
-import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag, Menu, UserRound, LayoutGrid, Home } from 'lucide-react';
+import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag, Menu, UserRound, LayoutGrid, Home, Construction } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCurrentUser } from '@/services/userService';
 import HeroSection from '../components/HeroSection';
 import ReviewsSection from '../components/ReviewsSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { initializeSampleReviews } from '@/services/reviewService';
-import { 
-  Drawer, 
-  DrawerClose, 
-  DrawerContent, 
-  DrawerTrigger 
-} from "@/components/ui/drawer";
-import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Card, CardContent } from '@/components/ui/card';
 
 const Index: React.FC = () => {
   const currentUser = getCurrentUser();
@@ -39,41 +33,45 @@ const Index: React.FC = () => {
         <div className="pt-10 flex flex-col space-y-4">
           <h3 className="text-xl font-bold mb-4">Menu</h3>
           
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-1 gap-3 mb-4">
             <Link to="/" className="w-full">
-              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
-                <Home className="h-4 w-4 text-primary" />
-                <span>Accueil</span>
+              <Button variant="outline" size="lg" className="w-full flex items-center justify-center gap-2 bg-primary/20 border-primary/30 py-5">
+                <Home className="h-5 w-5 text-primary" />
+                <span className="text-lg">Home</span>
               </Button>
             </Link>
             
-            <Link to="/free-mods" className="w-full">
-              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
-                <Download className="h-4 w-4 text-primary" />
-                <span>Mods</span>
-              </Button>
-            </Link>
+            <div className="grid grid-cols-2 gap-3">
+              <Link to="/free-mods" className="w-full">
+                <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2 bg-secondary/30 border-secondary/50 h-12">
+                  <Download className="h-4 w-4 text-primary" />
+                  <span>Mods</span>
+                </Button>
+              </Link>
+              
+              <Link to="/rules" className="w-full">
+                <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2 bg-secondary/30 border-secondary/50 h-12">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span>Rules</span>
+                </Button>
+              </Link>
+            </div>
             
-            <Link to="/rules" className="w-full">
-              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
-                <Shield className="h-4 w-4 text-primary" />
-                <span>Règles</span>
-              </Button>
-            </Link>
-            
-            <Link to="/tickets" className="w-full">
-              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
-                <Ticket className="h-4 w-4 text-primary" />
-                <span>Support</span>
-              </Button>
-            </Link>
-            
-            <Link to="/wip" className="w-full">
-              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
-                <LayoutGrid className="h-4 w-4 text-primary" />
-                <span>WIP</span>
-              </Button>
-            </Link>
+            <div className="grid grid-cols-2 gap-3">
+              <Link to="/tickets" className="w-full">
+                <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2 bg-secondary/30 border-secondary/50 h-12">
+                  <Ticket className="h-4 w-4 text-primary" />
+                  <span>Support</span>
+                </Button>
+              </Link>
+              
+              <Link to="/wip" className="w-full">
+                <Button variant="outline" size="sm" className="w-full flex items-center justify-center gap-2 bg-secondary/30 border-secondary/50 h-12">
+                  <Construction className="h-4 w-4 text-primary" />
+                  <span>WIP</span>
+                </Button>
+              </Link>
+            </div>
             
             {currentUser && (
               <Link to="/profile" className="w-full">
@@ -155,7 +153,7 @@ const Index: React.FC = () => {
           </section>
         )}
 
-        {/* Mobile Features Section - Updated with better styling */}
+        {/* Mobile Features Section */}
         {isMobile && (
           <section className="w-full pb-4">
             <motion.div
@@ -230,7 +228,7 @@ const Index: React.FC = () => {
           </section>
         )}
         
-        {/* Mobile Grid Features - Updated with better grid layout */}
+        {/* Mobile Grid Features */}
         {isMobile && (
           <section className="w-full pb-6">
             <motion.h3

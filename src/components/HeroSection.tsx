@@ -39,32 +39,41 @@ const HeroSection: React.FC = () => {
         className="w-24 md:w-40 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-6 md:mb-8"
       />
       
-      {/* Mobile Navigation Buttons - More prominent and styled */}
+      {/* Mobile Navigation Buttons - Style like in the reference image */}
       {isMobile && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
-          className="w-full mb-4 grid grid-cols-2 gap-2"
+          className="w-full mb-6 grid grid-cols-3 gap-3"
         >
-          <Link to="/" className="w-full">
-            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+          <Link to="/" className="col-span-3">
+            <Button variant="outline" size="lg" className="w-full bg-primary/20 border-primary/30 text-white py-6">
               Home
             </Button>
           </Link>
-          <Link to="/free-mods" className="w-full">
-            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+          
+          <Link to="/free-mods" className="col-span-1">
+            <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12">
               Mods
             </Button>
           </Link>
-          <Link to="/rules" className="w-full">
-            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+          
+          <Link to="/rules" className="col-span-1">
+            <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12">
               Rules
             </Button>
           </Link>
-          <Link to="/tickets" className="w-full">
-            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+          
+          <Link to="/tickets" className="col-span-1">
+            <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12 flex items-center justify-center">
               Tickets
+            </Button>
+          </Link>
+          
+          <Link to="/wip" className="col-span-3">
+            <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12">
+              Work in Progress
             </Button>
           </Link>
         </motion.div>
