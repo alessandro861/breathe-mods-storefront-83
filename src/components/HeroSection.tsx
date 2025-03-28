@@ -2,6 +2,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from './ui/button';
+import { Link } from 'react-router-dom';
+import { Download, ArrowRight } from 'lucide-react';
 
 const HeroSection: React.FC = () => {
   const isMobile = useIsMobile();
@@ -36,6 +39,24 @@ const HeroSection: React.FC = () => {
         className="w-24 md:w-40 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-6 md:mb-8"
       />
       
+      {/* Mobile Action Button */}
+      {isMobile && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="w-full mb-8"
+        >
+          <Link to="/free-mods" className="w-full block">
+            <Button size="lg" className="text-md group w-full shadow-lg shadow-primary/20">
+              <Download className="mr-2 h-5 w-5 group-hover:animate-pulse" />
+              Découvrir nos mods
+              <ArrowRight className="ml-2 h-4 w-4 opacity-70" />
+            </Button>
+          </Link>
+        </motion.div>
+      )}
+      
       {/* Mobile Feature Points */}
       {isMobile && (
         <motion.div
@@ -45,9 +66,9 @@ const HeroSection: React.FC = () => {
           className="grid grid-cols-1 gap-4 w-full mb-6"
         >
           {[
-            { title: "High Quality", desc: "Premium modifications" },
-            { title: "Updated", desc: "Latest game versions" },
-            { title: "Custom", desc: "Personalized mods" }
+            { title: "Haute Qualité", desc: "Modifications premium" },
+            { title: "Mis à jour", desc: "Dernières versions du jeu" },
+            { title: "Personnalisés", desc: "Mods sur mesure" }
           ].map((feature, index) => (
             <div 
               key={index} 
