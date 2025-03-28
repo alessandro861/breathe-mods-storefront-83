@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -29,7 +28,6 @@ import { getCurrentUser, addPurchase } from '@/services/userService';
 import { validateDiscountCode } from '@/services/discountService';
 import { useNavigate } from 'react-router-dom';
 
-// Define the form schema with validation
 const purchaseFormSchema = z.object({
   discordUsername: z.string().min(2, {
     message: "Discord username must be at least 2 characters.",
@@ -71,22 +69,16 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Store webhook URL in state and refresh it each time the dialog opens
   const [discordWebhookUrl, setDiscordWebhookUrl] = useState('');
-  
-  // ID of the Discord user to mention
   const discordUserIdToPing = '1336727014291275829';
 
-  // Refresh webhook URL when dialog opens
   useEffect(() => {
     if (isOpen) {
       const storedWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
       setDiscordWebhookUrl(storedWebhookUrl);
       
-      // Reset discount and price
       setDiscountApplied(null);
       
-      // Set initial price based on mod
       const basePrice = modTitle === "Capture Flag" ? 45 : extractPriceFromString(modPrice);
       setOriginalPrice(basePrice);
       setFinalPrice(basePrice);
@@ -102,13 +94,11 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
     }
   }, [isOpen, modTitle, modPrice]);
 
-  // Helper function to extract price from string like "45€" or "65€"
   const extractPriceFromString = (priceString: string): number => {
     const match = priceString.match(/(\d+)/);
     return match ? parseInt(match[0], 10) : 45;
   };
 
-  // Initialize form with validation
   const form = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseFormSchema),
     defaultValues: {
@@ -121,13 +111,11 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
     },
   });
 
-  // Update price when price option changes
   useEffect(() => {
     const priceOption = form.watch("priceOption");
     const newBasePrice = priceOption === 'basic' ? 45 : 65;
     setOriginalPrice(newBasePrice);
     
-    // Apply existing discount if there is one
     if (discountApplied !== null) {
       const discountAmount = (newBasePrice * discountApplied) / 100;
       setFinalPrice(newBasePrice - discountAmount);
@@ -136,7 +124,6 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
     }
   }, [form.watch("priceOption"), discountApplied]);
 
-  // Function to apply discount code
   const applyDiscountCode = () => {
     const discountCode = form.getValues("discountCode");
     
@@ -160,7 +147,6 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
       return;
     }
     
-    // Apply the discount
     setDiscountApplied(validationResult.percentage);
     const discountAmount = (originalPrice * validationResult.percentage) / 100;
     setFinalPrice(originalPrice - discountAmount);
@@ -175,30 +161,24 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Determine the price based on the selected option and discount
       const selectedPriceText = data.priceOption === 'basic' ? '45€' : '65€ (with EMP)';
       let selectedPrice = data.priceOption === 'basic' ? 45 : 65;
       
-      // Apply discount if available
       if (discountApplied !== null) {
         selectedPrice = finalPrice;
       }
       
-      // Format the price for display
       const finalPriceText = `${selectedPrice}€${discountApplied ? ` (${discountApplied}% discount applied)` : ''}`;
       
-      // Generate a unique ID for the purchase
       const purchaseId = `p${Date.now()}`;
       
-      // Check if user is logged in
       const userEmail = getCurrentUser();
       
-      // If logged in, save the purchase to user account
       if (userEmail) {
         const purchaseData = {
           id: purchaseId,
           productName: modTitle,
-          date: new Date().toISOString().split('T')[0], // Format as YYYY-MM-DD
+          date: new Date().toISOString().split('T')[0],
           price: selectedPrice,
           serverIp: data.serverIP,
           serverName: data.serverName,
@@ -214,9 +194,10 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
         }
       }
       
-      // Try to send Discord notification
-      if (discordWebhookUrl) {
-        // Create message with mention and all the fields
+      const purchaseWebhookUrl = localStorage.getItem('purchase-webhook-url') || '';
+      const purchaseNotificationsEnabled = localStorage.getItem('purchase-notifications-enabled') === 'true';
+      
+      if (purchaseWebhookUrl && purchaseNotificationsEnabled && data.serverName && data.serverIP && data.serverPort) {
         const message = createDiscordPurchaseMessage(
           modTitle,
           data.discordUsername,
@@ -227,18 +208,16 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
           discordUserIdToPing
         );
         
-        // Send notification - await the result
-        const notificationSent = await sendDiscordWebhook(discordWebhookUrl, message);
-        
-        if (!notificationSent) {
-          console.error("[Purchase] Failed to send notification to Discord");
+        try {
+          await sendDiscordWebhook(purchaseWebhookUrl, message);
+          console.log("Discord notification sent for new purchase");
+        } catch (error) {
+          console.error("Failed to send Discord notification:", error);
         }
       }
       
-      // Simulate processing time (in a real app, this would be your payment processing)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Show success message
       toast({
         title: "Purchase processed",
         description: userEmail 
@@ -251,7 +230,6 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
       setIsOpen(false);
       setDiscountApplied(null);
       
-      // If the user is logged in, suggest navigating to their purchases
       if (userEmail) {
         setTimeout(() => {
           toast({
@@ -279,7 +257,6 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
     }
   };
 
-  // Show different price options only for Capture Flag mod
   const showPriceOptions = modTitle === "Capture Flag";
 
   return (
@@ -415,7 +392,6 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
               </div>
             )}
             
-            {/* Discount Code Section */}
             <FormField
               control={form.control}
               name="discountCode"
@@ -448,7 +424,6 @@ const PurchaseDialogWithDiscount: React.FC<PurchaseDialogProps> = ({
               )}
             />
             
-            {/* Display final price */}
             <div className={`p-3 rounded-md ${discountApplied ? 'bg-green-500/10 border border-green-300/30' : 'bg-primary/10'}`}>
               <div className="flex justify-between font-medium">
                 <span>Final Price:</span>

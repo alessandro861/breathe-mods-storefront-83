@@ -19,12 +19,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Server, Globe, Plug, Save, Plus, X } from 'lucide-react';
+import { Server, Globe, Plug, Save, Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Purchase, getCurrentUser, updateWhitelistForPurchase } from '@/services/userService';
-import { createDiscordPurchaseMessage, sendDiscordWebhook } from '@/utils/discordIntegration';
+import { createDiscordUpdateMessage, sendDiscordWebhook } from '@/utils/discordIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 
@@ -135,23 +135,22 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
         throw new Error("Failed to update purchase details");
       }
       
-      // Send notification to Discord
-      const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
-      if (discordWebhookUrl) {
-        // Create a message for the update notification
-        const message = {
-          content: `🔄 **Purchase Update - Primary Whitelist**\n` +
-            `Product: **${purchase.productName}**\n` +
-            `Server Name: **${data.serverName}** (Updated)\n` +
-            `Server IP: **${data.serverIp}** (Updated)\n` +
-            `Server Port: **${data.serverPort}** (Updated)\n`,
-          username: "Breathe Mods Bot",
-          avatar_url: "https://cdn-icons-png.flaticon.com/512/1067/1067357.png"
-        };
+      // Send notification to Discord - use the purchase webhook URL from WebhookSettings
+      const purchaseWebhookUrl = localStorage.getItem('purchase-webhook-url') || '';
+      const purchaseNotificationsEnabled = localStorage.getItem('purchase-notifications-enabled') === 'true';
+      
+      if (purchaseWebhookUrl && purchaseNotificationsEnabled) {
+        // Create a message for the update notification using the utility function
+        const message = createDiscordUpdateMessage(
+          purchase.productName || purchase.modName,
+          data.serverName,
+          data.serverIp,
+          data.serverPort
+        );
         
         try {
-          await sendDiscordWebhook(discordWebhookUrl, message);
-          console.log("Discord notification sent for purchase update");
+          await sendDiscordWebhook(purchaseWebhookUrl, message);
+          console.log("Discord notification sent for primary whitelist update");
         } catch (error) {
           console.error("Failed to send Discord notification:", error);
           // Continue with the process even if Discord notification fails
@@ -212,13 +211,15 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
         throw new Error("Failed to update purchase details");
       }
       
-      // Send notification to Discord
-      const discordWebhookUrl = localStorage.getItem('discord-webhook-url') || '';
-      if (discordWebhookUrl) {
-        // Create a message for the update notification
+      // Send notification to Discord - use the purchase webhook URL from WebhookSettings
+      const purchaseWebhookUrl = localStorage.getItem('purchase-webhook-url') || '';
+      const purchaseNotificationsEnabled = localStorage.getItem('purchase-notifications-enabled') === 'true';
+      
+      if (purchaseWebhookUrl && purchaseNotificationsEnabled) {
+        // Add "Secondary" label to make it clear this is for the second whitelist
         const message = {
           content: `🔄 **Purchase Update - Secondary Whitelist**\n` +
-            `Product: **${purchase.productName}**\n` +
+            `Product: **${purchase.productName || purchase.modName}**\n` +
             `Secondary Server Name: **${data.serverName}** (Added/Updated)\n` +
             `Secondary Server IP: **${data.serverIp}** (Added/Updated)\n` +
             `Secondary Server Port: **${data.serverPort}** (Added/Updated)\n`,
@@ -227,7 +228,7 @@ const PurchaseEditDialog: React.FC<PurchaseEditDialogProps> = ({
         };
         
         try {
-          await sendDiscordWebhook(discordWebhookUrl, message);
+          await sendDiscordWebhook(purchaseWebhookUrl, message);
           console.log("Discord notification sent for secondary whitelist update");
         } catch (error) {
           console.error("Failed to send Discord notification:", error);
