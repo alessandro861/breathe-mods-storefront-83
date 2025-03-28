@@ -39,13 +39,44 @@ const HeroSection: React.FC = () => {
         className="w-24 md:w-40 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-6 md:mb-8"
       />
       
+      {/* Mobile Navigation Buttons - More prominent and styled */}
+      {isMobile && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="w-full mb-4 grid grid-cols-2 gap-2"
+        >
+          <Link to="/" className="w-full">
+            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+              Home
+            </Button>
+          </Link>
+          <Link to="/free-mods" className="w-full">
+            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+              Mods
+            </Button>
+          </Link>
+          <Link to="/rules" className="w-full">
+            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+              Rules
+            </Button>
+          </Link>
+          <Link to="/tickets" className="w-full">
+            <Button variant="outline" size="sm" className="w-full bg-primary/20 border-primary/30 text-white">
+              Tickets
+            </Button>
+          </Link>
+        </motion.div>
+      )}
+      
       {/* Mobile Action Button */}
       {isMobile && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
-          className="w-full mb-8"
+          className="w-full mb-6"
         >
           <Link to="/free-mods" className="w-full block">
             <Button size="lg" className="text-md group w-full shadow-lg shadow-primary/20">

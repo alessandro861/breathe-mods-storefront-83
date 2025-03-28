@@ -1,10 +1,9 @@
-
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
 import NavButton from '../components/NavButton';
 import { Button } from '@/components/ui/button';
-import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag, Menu, UserRound, LayoutGrid } from 'lucide-react';
+import { Download, Shield, Gift, Ticket, ArrowRight, Star, MousePointer, ShoppingBag, Menu, UserRound, LayoutGrid, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getCurrentUser } from '@/services/userService';
 import HeroSection from '../components/HeroSection';
@@ -18,6 +17,7 @@ import {
   DrawerTrigger 
 } from "@/components/ui/drawer";
 import { Card, CardContent } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const Index: React.FC = () => {
   const currentUser = getCurrentUser();
@@ -29,34 +29,76 @@ const Index: React.FC = () => {
   }, []);
   
   const MobileMenu = () => (
-    <Drawer>
-      <DrawerTrigger asChild>
+    <Sheet>
+      <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="fixed top-4 right-4 z-50 bg-secondary/80 backdrop-blur-sm">
           <Menu className="h-5 w-5" />
         </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <div className="p-4 space-y-3 max-w-md mx-auto">
-          <h3 className="text-xl font-bold text-center mb-4">Menu</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <NavButton to="/rules" label="Règles" icon={<Shield className="h-5 w-5 text-primary" />} delay={0.1} />
-            <NavButton to="/free-mods" label="Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
-            <NavButton to="/tickets" label="Support" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.3} />
-            {currentUser ? (
-              <>
-                <NavButton to="/purchases" label="Achats" icon={<ShoppingBag className="h-5 w-5 text-primary" />} delay={0.4} />
-                <NavButton to="/profile" label="Profil" icon={<UserRound className="h-5 w-5 text-primary" />} delay={0.5} />
-              </>
-            ) : (
-              <NavButton to="/login" label="Connexion" icon={<UserRound className="h-5 w-5 text-primary" />} delay={0.4} />
+      </SheetTrigger>
+      <SheetContent>
+        <div className="pt-10 flex flex-col space-y-4">
+          <h3 className="text-xl font-bold mb-4">Menu</h3>
+          
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <Link to="/" className="w-full">
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                <Home className="h-4 w-4 text-primary" />
+                <span>Accueil</span>
+              </Button>
+            </Link>
+            
+            <Link to="/free-mods" className="w-full">
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                <Download className="h-4 w-4 text-primary" />
+                <span>Mods</span>
+              </Button>
+            </Link>
+            
+            <Link to="/rules" className="w-full">
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Règles</span>
+              </Button>
+            </Link>
+            
+            <Link to="/tickets" className="w-full">
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-primary" />
+                <span>Support</span>
+              </Button>
+            </Link>
+            
+            <Link to="/wip" className="w-full">
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-primary" />
+                <span>WIP</span>
+              </Button>
+            </Link>
+            
+            {currentUser && (
+              <Link to="/profile" className="w-full">
+                <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                  <UserRound className="h-4 w-4 text-primary" />
+                  <span>Profil</span>
+                </Button>
+              </Link>
             )}
           </div>
-          <DrawerClose asChild>
-            <Button className="w-full mt-4">Fermer</Button>
-          </DrawerClose>
+
+          <a 
+            href="https://discord.gg/Yr8aY3fW4f" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="w-full"
+          >
+            <Button size="sm" variant="default" className="w-full">
+              <Ticket className="mr-2 h-4 w-4" />
+              Rejoindre Discord
+            </Button>
+          </a>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SheetContent>
+    </Sheet>
   );
   
   return (
@@ -113,7 +155,7 @@ const Index: React.FC = () => {
           </section>
         )}
 
-        {/* Mobile Features Section */}
+        {/* Mobile Features Section - Updated with better styling */}
         {isMobile && (
           <section className="w-full pb-4">
             <motion.div
@@ -188,7 +230,7 @@ const Index: React.FC = () => {
           </section>
         )}
         
-        {/* Mobile Grid Features */}
+        {/* Mobile Grid Features - Updated with better grid layout */}
         {isMobile && (
           <section className="w-full pb-6">
             <motion.h3
