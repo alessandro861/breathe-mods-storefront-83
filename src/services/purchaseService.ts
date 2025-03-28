@@ -52,3 +52,8 @@ export const deletePurchase = (id: string): void => {
   const updatedPurchases = purchases.filter(p => p.id !== id);
   localStorage.setItem('purchases', JSON.stringify(updatedPurchases));
 };
+
+// Fonction pour réinitialiser tous les achats
+export const resetAllPurchases = (): void => {
+  localStorage.setItem('purchases', JSON.stringify([]));
+};
