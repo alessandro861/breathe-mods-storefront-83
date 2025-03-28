@@ -131,12 +131,12 @@ const VerifyOTP = () => {
                         maxLength={6}
                         render={({ slots }) => (
                           <InputOTPGroup className="gap-2 justify-center">
-                            {slots.map((slot, index) => (
+                            {slots.map((slot, i) => (
                               <InputOTPSlot 
-                                key={index} 
+                                key={i} 
                                 className="w-12 h-12 text-lg" 
                                 {...slot} 
-                                index={index}
+                                index={i}
                               />
                             ))}
                           </InputOTPGroup>
