@@ -39,7 +39,7 @@ const HeroSection: React.FC = () => {
         className="w-24 md:w-40 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-6 md:mb-8"
       />
       
-      {/* Mobile Navigation Buttons - Style like in the reference image */}
+      {/* Mobile Navigation Buttons - 3x2 Grid Layout */}
       {isMobile && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -71,11 +71,23 @@ const HeroSection: React.FC = () => {
             </Button>
           </Link>
           
-          <Link to="/wip" className="col-span-3">
+          <Link to="/wip" className="col-span-1">
             <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12">
-              Work in Progress
+              WIP
             </Button>
           </Link>
+          
+          <Link to="/profile" className="col-span-1">
+            <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12">
+              Profile
+            </Button>
+          </Link>
+          
+          <a href="https://discord.gg/Yr8aY3fW4f" target="_blank" rel="noopener noreferrer" className="col-span-1">
+            <Button variant="outline" size="sm" className="w-full bg-secondary/30 border-secondary/50 text-white h-12">
+              Discord
+            </Button>
+          </a>
         </motion.div>
       )}
       
