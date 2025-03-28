@@ -25,6 +25,7 @@ import UserProfile from './pages/UserProfile';
 import SubmitReview from './pages/SubmitReview';
 import { AdminProvider } from './hooks/useAdmin';
 import { addSampleData } from './services/userService';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 function App() {
   useEffect(() => {
@@ -33,33 +34,35 @@ function App() {
   }, []);
 
   return (
-    <AdminProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/free-mods" element={<FreeMods />} />
-          <Route path="/paid-mods" element={<PaidMods />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/rules" element={<Rules />} />
-          <Route path="/wip" element={<WorkInProgress />} />
-          <Route path="/request" element={<Request />} />
-          <Route path="/tickets" element={<TicketSystem />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/purchases" element={<UserPurchases />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/submit-review" element={<SubmitReview />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </Router>
-    </AdminProvider>
+    <LanguageProvider>
+      <AdminProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/free-mods" element={<FreeMods />} />
+            <Route path="/paid-mods" element={<PaidMods />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/rules" element={<Rules />} />
+            <Route path="/wip" element={<WorkInProgress />} />
+            <Route path="/request" element={<Request />} />
+            <Route path="/tickets" element={<TicketSystem />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/purchases" element={<UserPurchases />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/submit-review" element={<SubmitReview />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </AdminProvider>
+    </LanguageProvider>
   );
 }
 
