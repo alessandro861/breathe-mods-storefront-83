@@ -8,7 +8,8 @@ export interface Review {
   comment: string;
   date: string;
   modId?: string;
-  modName?: string;
+  productId?: string;
+  productName?: string;
 }
 
 // Fonction pour initialiser les avis d'exemple
@@ -30,10 +31,29 @@ export const getAllReviews = (): Review[] => {
   return JSON.parse(reviews);
 };
 
+// Fonction pour récupérer les avis approuvés
+export const getApprovedReviews = (): Review[] => {
+  // Dans un système réel, on filtrerait en fonction d'un statut 'approved'
+  // Pour simplifier, on retourne tous les avis
+  return getAllReviews();
+};
+
 // Fonction pour ajouter un avis
-export const addReview = (review: Review): void => {
+export const addReview = (review: Partial<Review>): void => {
   const reviews = getAllReviews();
-  reviews.push(review);
+  const newReview: Review = {
+    id: `rev_${Date.now()}`,
+    userId: review.userId || '',
+    username: review.username || '',
+    rating: review.rating || 5,
+    comment: review.comment || '',
+    date: new Date().toISOString().split('T')[0],
+    ...(review.modId && { modId: review.modId }),
+    ...(review.productId && { productId: review.productId }),
+    ...(review.productName && { productName: review.productName })
+  };
+  
+  reviews.push(newReview);
   localStorage.setItem('reviews', JSON.stringify(reviews));
 };
 
