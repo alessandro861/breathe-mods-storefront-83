@@ -265,22 +265,7 @@ const Index: React.FC = () => {
 
         {/* Quick Access - Desktop */}
         {!isMobile && <section className="w-full pb-6 md:pb-0">
-            <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 w-full max-w-5xl mx-auto" initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} transition={{
-          delay: 1.7,
-          duration: 0.5
-        }}>
-              <NavButton to="/rules" label="Rules" icon={<Shield className="h-5 w-5 text-primary" />} delay={0.1} />
-              <NavButton to="/free-mods" label="Mods" icon={<Download className="h-5 w-5 text-primary" />} delay={0.2} />
-              <NavButton to="/tickets" label="Ticket System" icon={<Ticket className="h-5 w-5 text-primary" />} delay={0.4} />
-              {currentUser && <>
-                  <NavButton to="/purchases" label="My Purchases" icon={<ShoppingBag className="h-5 w-5 text-primary" />} delay={0.6} comingSoon={false} />
-                  <NavButton to="/profile" label="My Profile" icon={<UserRound className="h-5 w-5 text-primary" />} delay={0.8} comingSoon={false} />
-                </>}
-            </motion.div>
+            
           </section>}
       </div>
     </Layout>;
