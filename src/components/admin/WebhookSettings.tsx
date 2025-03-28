@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { BellRing, MessageSquare, ShoppingCart, Ticket, Send } from 'lucide-react';
+import { BellRing, MessageSquare, ShoppingCart, Ticket, Send, Wifi } from 'lucide-react';
 import { sendDiscordWebhook } from '@/utils/discordIntegration';
 
 const WebhookSettings = () => {
@@ -15,6 +15,7 @@ const WebhookSettings = () => {
   const [ticketWebhook, setTicketWebhook] = useState(() => localStorage.getItem('ticket-webhook-url') || '');
   const [purchaseWebhook, setPurchaseWebhook] = useState(() => localStorage.getItem('purchase-webhook-url') || '');
   const [transcriptWebhook, setTranscriptWebhook] = useState(() => localStorage.getItem('transcript-webhook-url') || '');
+  const [whitelistWebhook, setWhitelistWebhook] = useState(() => localStorage.getItem('whitelist-webhook-url') || '');
   
   const [ticketNotificationsEnabled, setTicketNotificationsEnabled] = useState(() => 
     localStorage.getItem('ticket-notifications-enabled') === 'true'
@@ -25,11 +26,14 @@ const WebhookSettings = () => {
   const [transcriptEnabled, setTranscriptEnabled] = useState(() => 
     localStorage.getItem('transcript-enabled') === 'true'
   );
+  const [whitelistNotificationsEnabled, setWhitelistNotificationsEnabled] = useState(() => 
+    localStorage.getItem('whitelist-notifications-enabled') === 'true'
+  );
   
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
 
-  const handleSaveSettings = (type: 'ticket' | 'purchase' | 'transcript') => {
+  const handleSaveSettings = (type: 'ticket' | 'purchase' | 'transcript' | 'whitelist') => {
     setIsSaving(true);
     try {
       let webhookUrl = '';
@@ -51,6 +55,11 @@ const WebhookSettings = () => {
         enabled = transcriptEnabled;
         localStorage.setItem('transcript-webhook-url', transcriptWebhook);
         localStorage.setItem('transcript-enabled', transcriptEnabled.toString());
+      } else if (type === 'whitelist') {
+        webhookUrl = whitelistWebhook;
+        enabled = whitelistNotificationsEnabled;
+        localStorage.setItem('whitelist-webhook-url', whitelistWebhook);
+        localStorage.setItem('whitelist-notifications-enabled', whitelistNotificationsEnabled.toString());
       }
       
       // Basic validation
@@ -78,7 +87,7 @@ const WebhookSettings = () => {
     }
   };
 
-  const handleTestWebhook = async (type: 'ticket' | 'purchase' | 'transcript') => {
+  const handleTestWebhook = async (type: 'ticket' | 'purchase' | 'transcript' | 'whitelist') => {
     setIsTesting(true);
     
     let webhookUrl = '';
@@ -102,6 +111,12 @@ const WebhookSettings = () => {
       testMessage = {
         content: "📝 **Test Ticket Transcript**\nThis is a test ticket transcript notification from the admin dashboard.",
         username: "Breathe Transcript Bot",
+      };
+    } else if (type === 'whitelist') {
+      webhookUrl = whitelistWebhook;
+      testMessage = {
+        content: "🔒 **Test Whitelist Notification**\nServer Name: **Test Server**\nServer IP: **127.0.0.1**\nServer Port: **25565**",
+        username: "Breathe Whitelist Bot",
       };
     }
     
@@ -145,12 +160,15 @@ const WebhookSettings = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="tickets" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-4 mb-4">
           <TabsTrigger value="tickets" className="flex gap-1 items-center">
             <Ticket className="h-4 w-4" /> Ticket Notifications
           </TabsTrigger>
           <TabsTrigger value="purchases" className="flex gap-1 items-center">
             <ShoppingCart className="h-4 w-4" /> Purchase Notifications
+          </TabsTrigger>
+          <TabsTrigger value="whitelist" className="flex gap-1 items-center">
+            <Wifi className="h-4 w-4" /> Whitelist Notifications
           </TabsTrigger>
           <TabsTrigger value="transcripts" className="flex gap-1 items-center">
             <MessageSquare className="h-4 w-4" /> Ticket Transcripts
@@ -260,6 +278,62 @@ const WebhookSettings = () => {
                 </Button>
                 <Button 
                   onClick={() => handleSaveSettings('purchase')}
+                  disabled={isSaving}
+                >
+                  Save Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Whitelist Notifications Tab */}
+        <TabsContent value="whitelist">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wifi className="h-5 w-5 text-primary" />
+                Whitelist Notifications
+              </CardTitle>
+              <CardDescription>
+                Configure webhook settings for whitelist notifications. Receive a notification when a user adds or updates server whitelist information.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-medium">Enable Whitelist Notifications</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Receive a Discord notification when a user adds or updates server information (name, IP, port)
+                  </p>
+                </div>
+                <Switch 
+                  checked={whitelistNotificationsEnabled} 
+                  onCheckedChange={setWhitelistNotificationsEnabled} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="whitelist-webhook">Discord Webhook URL</Label>
+                <Input
+                  id="whitelist-webhook"
+                  placeholder="https://discord.com/api/webhooks/..."
+                  value={whitelistWebhook}
+                  onChange={(e) => setWhitelistWebhook(e.target.value)}
+                  disabled={!whitelistNotificationsEnabled}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleTestWebhook('whitelist')}
+                  disabled={!whitelistNotificationsEnabled || isTesting || !whitelistWebhook}
+                >
+                  Test Webhook
+                </Button>
+                <Button 
+                  onClick={() => handleSaveSettings('whitelist')}
                   disabled={isSaving}
                 >
                   Save Settings
