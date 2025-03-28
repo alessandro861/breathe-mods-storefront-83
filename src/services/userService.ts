@@ -1,4 +1,3 @@
-
 // Types pour les utilisateurs
 export interface User {
   id: string;
@@ -18,6 +17,7 @@ export interface UserProfile {
   createdAt: string;
   bio?: string;
   avatarUrl?: string;
+  avatar?: string; // Added this property to fix UserProfile errors
 }
 
 export interface Purchase {
@@ -25,6 +25,7 @@ export interface Purchase {
   userId: string;
   modId: string;
   modName: string;
+  productName?: string; // Added this property
   date: string;
   price: number;
   status: 'completed' | 'pending' | 'failed';
@@ -33,6 +34,9 @@ export interface Purchase {
   serverName?: string;
   serverPort?: string;
   whitelist?: boolean;
+  secondServerName?: string; // Added this property
+  secondServerIp?: string; // Added this property
+  secondServerPort?: string; // Added this property
 }
 
 // Fonction pour initialiser les données utilisateur
@@ -215,16 +219,41 @@ export const addPurchase = (email: string, purchase: any): boolean => {
   return true;
 };
 
-// Mettre à jour le statut whitelist d'un achat
-export const updateWhitelistForPurchase = (email: string, purchaseId: string, whitelist: boolean): boolean => {
+// Function signature update for updateWhitelistForPurchase
+export const updateWhitelistForPurchase = (
+  email: string, 
+  purchaseId: string, 
+  serverDetails: {
+    serverName?: string;
+    serverIp?: string;
+    serverPort?: string;
+  },
+  isSecondary: boolean = false
+): Purchase => {
   const purchases = getUserPurchases(email);
   const index = purchases.findIndex(p => p.id === purchaseId);
   
-  if (index === -1) return false;
+  if (index === -1) throw new Error("Purchase not found");
   
-  purchases[index].whitelist = whitelist;
+  // Update the correct set of properties based on whether this is a primary or secondary whitelist
+  if (isSecondary) {
+    purchases[index] = {
+      ...purchases[index],
+      secondServerName: serverDetails.serverName,
+      secondServerIp: serverDetails.serverIp,
+      secondServerPort: serverDetails.serverPort
+    };
+  } else {
+    purchases[index] = {
+      ...purchases[index],
+      serverName: serverDetails.serverName,
+      serverIp: serverDetails.serverIp,
+      serverPort: serverDetails.serverPort
+    };
+  }
+  
   localStorage.setItem(`purchases_${email}`, JSON.stringify(purchases));
-  return true;
+  return purchases[index];
 };
 
 // Pour l'admin: récupérer tous les utilisateurs avec leurs données

@@ -5,10 +5,17 @@ export interface Purchase {
   userId: string;
   modId: string;
   modName: string;
+  productName?: string; // Added to match userService
   date: string;
   price: number;
   status: 'completed' | 'pending' | 'failed';
   licenseKey?: string;
+  serverName?: string; // Added to support whitelist functionality
+  serverIp?: string; // Added to support whitelist functionality
+  serverPort?: string; // Added to support whitelist functionality
+  secondServerName?: string; // Added to support secondary whitelist
+  secondServerIp?: string; // Added to support secondary whitelist
+  secondServerPort?: string; // Added to support secondary whitelist
 }
 
 // Fonction pour récupérer tous les achats

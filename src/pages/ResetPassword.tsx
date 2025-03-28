@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { useState } from 'react';
@@ -62,8 +61,8 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      // Update the password
-      const success = resetPassword(email, token, values.password);
+      // Update the password - removing the token parameter
+      const success = resetPassword(email, values.password);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
